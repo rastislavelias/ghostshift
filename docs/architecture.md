@@ -1,6 +1,6 @@
 # Architecture: foundation
 
-The workspace has a console, database, planning worker, and dedicated Ollama, plus startup tasks:
+The workspace has a console, database, planning/development workers, isolated executor and dedicated Ollama, plus startup tasks:
 
 1. **Console**: Next.js + TypeScript, with Tailwind CSS 4 and shadcn/ui. Renders drafts and exposes `/api/projects` and
    `/api/health`. Database access uses Prisma Client with the PostgreSQL driver adapter.
@@ -27,14 +27,15 @@ The current flow is brief → persisted planning job → plan version → owner 
 explicit approval. The worker never approves its own output. PostgreSQL tracks revision
 numbers, jobs, attempts, plans, and events. See [workflow](workflow.md) for limits and leases.
 
-Future development flow: approved plan → bounded coding job → isolated execution workspace
-→ reviewable diff and evidence → human decision. Coding execution is not implemented.
+Development flow: approved plan → explicit task → persisted developer job → LangGraph
+developer/check/repair loop → isolated executor → patch and evidence → human decision.
+See [development](development.md) for the supported playground and isolation limits.
 
 ## Deployment boundaries
 
 - This starter is a single-owner local tool. It has no authentication or tenant isolation.
 - Saving a brief inserts a draft. Planning starts only on an explicit request.
-- Application API handlers are short-lived; future coding tasks run in separate workers.
+- Application API handlers are short-lived; coding tasks run in a separate developer worker.
 - No GitHub token, Docker socket, or shell execution is available to the planner.
 - Optional NVIDIA GPU access belongs only to Ollama; console and worker have no GPU devices.
 - Client code and deliverables will live in separate repositories/workspaces.

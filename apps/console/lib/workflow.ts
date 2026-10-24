@@ -14,6 +14,7 @@ export async function projectDetail(id: string) {
       max_output_tokens: true, error: true, created_at: true, finished_at: true,
       runs: { orderBy: { number: 'asc' } },
     } },
+    development_jobs: { orderBy: { created_at: 'desc' }, take: 10, include: { runs: { orderBy: { number: 'asc' } } } },
     events: { orderBy: [{ created_at: 'desc' }, { id: 'desc' }], take: 100 },
   } });
 }

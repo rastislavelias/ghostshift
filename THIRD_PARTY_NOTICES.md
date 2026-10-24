@@ -27,3 +27,5 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+LangGraph and LangChain Core are MIT-licensed dependencies used for the bounded development workflow. Zod is MIT-licensed. Their package license files are retained in installed dependencies. No LangSmith service or subscription is required.

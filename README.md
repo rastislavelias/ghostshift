@@ -4,11 +4,11 @@
 
 Ghostshift is an open-source experiment in building a human-directed AI development studio.
 Ghostshift turns a brief into a reviewable AI project plan with a Next.js control console,
-PostgreSQL, Prisma ORM, a persisted worker, and its own Ollama instance.
+PostgreSQL, Prisma ORM, persisted workers, and its own Ollama instance.
 
-**Current status: project planning and human approval.** Create a brief, select a model,
-review/edit/version the plan, request changes, and approve a specific version. Coding agents,
-GitHub automation, deployment automation, and voice input are future work. No paid API key
+**Current status: planning, approval and one bounded development task.** Create a brief, select a model,
+review/edit/version the plan, request changes, and approve a specific version. The developer can prepare a playground patch with real checks and human review.
+GitHub write automation, deployment automation, and voice input are future work. No paid API key
 is needed for the bundled local planner.
 
 ## Start with Docker
@@ -25,7 +25,7 @@ docker compose up --build -d --wait
 ```
 
 Open **http://localhost:3000** and create your first project. Startup waits for PostgreSQL,
-runs Prisma migrations, and starts the console and worker. On first startup, a dedicated
+runs Prisma migrations, and starts the console, workers and isolated executor. On first startup, a dedicated
 Ollama service downloads `qwen3:4b` into its own persistent model volume. Allow time and disk
 space for the image and model download. Later starts reuse the model and cached layers.
 No inference is requested until you ask for a project plan; external paid APIs are opt-in.
@@ -49,9 +49,12 @@ Then open http://localhost:3000 on your own computer.
 | `db/migrations` | Immutable legacy SQL, retained for upgrade verification |
 | `scripts` | Startup, database migration, smoke and workflow integration checks |
 | `docs` | Architecture, recovery instructions, and the first development milestone |
-| `services/orchestrator` | Persisted planning worker, provider adapters, leases, retries and cancellation |
+| `services/orchestrator` | Planning/development workers, LangGraph, provider adapters, leases and bounded retries |
+| `services/executor` | Fixed-command, network-denied Next.js execution sandbox |
 | `AGENTS.md` | Repository instructions for AI coding tools and contributors |
 | `.github/workflows/ci.yml` | Type checks, unit tests, Docker build and integration checks |
+
+See [development workflow and sandbox boundaries](docs/development.md) to configure a public playground and run a task after plan approval.
 
 ## Configuration
 

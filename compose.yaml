@@ -24,6 +24,7 @@ services:
       - "127.0.0.1:${GHOSTSHIFT_PORT:-3000}:3000"
     environment:
       <<: *planner-environment
+      DEVELOPER_REPOSITORY: ${DEVELOPER_REPOSITORY:-}
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: "1"
       PGHOST: database
@@ -94,6 +95,66 @@ services:
     security_opt:
       - no-new-privileges:true
 
+  developer:
+    build:
+      context: .
+      target: worker
+    command: ["node", "worker/services/orchestrator/developer-worker.js"]
+    restart: unless-stopped
+    init: true
+    environment:
+      <<: *planner-environment
+      PGHOST: database
+      PGPORT: "5432"
+      PGDATABASE: ghostshift
+      PGUSER: ghostshift
+      PGPASSWORD: ${POSTGRES_PASSWORD:-ghostshift-local-only}
+      EXECUTOR_TOKEN: ${EXECUTOR_TOKEN:-ghostshift-local-executor}
+      DEVELOPER_MAX_ATTEMPTS: ${DEVELOPER_MAX_ATTEMPTS:-2}
+    networks: [default, execution]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      model-init:
+        condition: service_completed_successfully
+      executor:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "const f=require('node:fs');process.exit(Date.now()-f.statSync('/tmp/ghostshift-developer-heartbeat').mtimeMs<45000?0:1)"]
+      interval: 15s
+      timeout: 5s
+      retries: 4
+      start_period: 30s
+    stop_grace_period: 30s
+    security_opt: [no-new-privileges:true]
+
+  executor:
+    build:
+      context: .
+      dockerfile: services/executor/Dockerfile
+    restart: unless-stopped
+    environment:
+      EXECUTOR_TOKEN: ${EXECUTOR_TOKEN:-ghostshift-local-executor}
+    networks: [execution]
+    read_only: true
+    tmpfs:
+      - /work:rw,nosuid,nodev,size=536870912,mode=0755
+      - /tmp:rw,nosuid,nodev,size=134217728,mode=1777
+    cap_drop: [ALL]
+    cap_add: [NET_ADMIN, SETUID, SETGID, CHOWN, KILL, DAC_OVERRIDE]
+    security_opt: [no-new-privileges:true]
+    sysctls:
+      net.ipv6.conf.all.disable_ipv6: "1"
+    mem_limit: 3g
+    cpus: 2
+    pids_limit: 128
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
   ollama:
     image: ollama/ollama:0.40.7@sha256:2e6cc92ffa43b4b1a2e70e315407e00ac97ec125afc71277d73c7efe01c4f31b
     restart: unless-stopped
@@ -145,3 +206,7 @@ services:
 volumes:
   ollama-data:
   postgres-data:
+
+networks:
+  execution:
+    internal: true

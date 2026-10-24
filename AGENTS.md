@@ -3,7 +3,7 @@
 ## Purpose and scope
 
 Build a human-directed AI development studio in small, verifiable increments.
-The current release is a local-only planning and human-approval workspace, not an autonomous development team.
+The current release supports planning, human approval and bounded playground development with human result review. It is not an autonomous development team.
 Keep that distinction explicit in code, UI, documentation, and PR descriptions.
 
 ## Repository map
@@ -27,7 +27,7 @@ Keep that distinction explicit in code, UI, documentation, and PR descriptions.
 4. Use parameterized SQL, validate external input, and keep errors free of secrets.
 5. Add new timestamped Prisma migrations; never rewrite a released migration or baseline.
    Review generated SQL and preserve PostgreSQL CHECK constraints, which Prisma does not model.
-6. Keep long-running model and coding work out of web requests. Future workers need
+6. Keep long-running model and coding work out of web requests. Workers need
    persisted jobs, retry limits, execution isolation, and cancellation.
 7. Never commit credentials, `.env`, database dumps, client data, or local machine identifiers.
 8. Do not send email, incur AI charges, change production, or delete persistent data without

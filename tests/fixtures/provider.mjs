@@ -10,7 +10,11 @@ createServer(async (req, res) => {
   const count = (counts.get(input) || 0) + 1; counts.set(input, count);
   if (input.includes('[always-fail]') || (input.includes('[fail-once]') && count === 1)) { res.writeHead(503); res.end('Synthetic failure'); return; }
   if (input.includes('[slow]')) await new Promise(resolve => setTimeout(resolve, 25000));
-  const text = input.includes('[invalid]') ? '{}' : JSON.stringify(plan);
+  const coding = body.format?.properties?.files || body.text?.format?.name === 'code_change';
+  const parsed = coding ? JSON.parse(input) : null;
+  const invalidCode = coding && (parsed.task.includes('[bad-code]') || (parsed.task.includes('[repair]') && !parsed.checks?.length));
+  const change = { summary: 'Implemented the requested playground page.', files: [{ path: 'app/page.tsx', content: invalidCode ? 'export default function Home() { return <main><h1>Broken</h1></main> BAD; }' : 'export default function Home() { return <main><h1>Ghostshift Development Demo</h1><p>A verified change prepared for human review.</p><section><h2>Features</h2><p>Bounded tasks, isolated checks and reviewable patches.</p></section></main>; }\n' }] };
+  const text = input.includes('[invalid]') ? '{}' : JSON.stringify(coding ? change : plan);
   res.writeHead(200, { 'Content-Type': 'application/json' });
   if (req.url === '/v1/responses') res.end(JSON.stringify({ status: 'completed', output: [{ content: [{ type: 'output_text', text }] }], usage: { input_tokens: 100, output_tokens: 200 } }));
   else if (req.url === '/v1/chat/completions') res.end(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: text } }], usage: { prompt_tokens: 100, completion_tokens: 200 } }));

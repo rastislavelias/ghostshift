@@ -90,3 +90,30 @@ The CI workflow also runs the legacy upgrade checks for subsequent commits.
 Integration data was synthetic and isolated. The fixture is not a model-quality evaluation.
 Paid OpenAI/compatible API calls were not made; those adapters were checked with mocked
 transport only. No full accessibility or mobile visual audit was performed for this release.
+
+## Bounded development workflow — 2026-10-24
+
+Executed on a disposable Linux/amd64 Docker stack, with a synthetic model provider and real
+Next.js execution (no paid AI calls):
+
+- `npm ci`, seven unit/provider/graph tests, production build and both TypeScript projects.
+- Smoke checks and the existing planning lifecycle regression.
+- Development approval gating and duplicate/stale submission rejection; a deliberately broken
+  TypeScript page repaired on the second model attempt; actual typecheck, page render tests and
+  production build; downloadable patch and pinned Git base; owner revision and acceptance;
+  terminal attempt exhaustion; cancellation during a provider call; approval revocation.
+- Developer process killed during a reserved attempt, lease expired in the disposable DB,
+  restarted worker: old attempt marked interrupted, second/final attempt returned a reviewable
+  result. No unbounded retry or automatic approval.
+- Executor API authentication and protected dependency manifest; generated code checked that
+  DB/provider/control secrets were absent, supervisor process environment was unreadable, child
+  Linux capabilities were zero, dependency filesystem was read-only, and new loopback/external
+  network connections were denied. These probes also passed a real production build.
+- Legacy schema drift rejection, three-migration upgrade, original row preservation, PostgreSQL
+  CHECK constraints and persistence across stack restart.
+
+The sandbox process cap uses a per-container pids cgroup. A per-UID RLIMIT_NPROC was removed
+because Linux counts the same host UID across containers, causing unrelated stacks to consume
+that shared limit. Next.js development type paths are included in the trusted template so it
+no longer rewrites tsconfig during the sandbox build. Initial failing checks were rerun after
+these fixes. Container isolation is not a security certification or hostile-tenant boundary.

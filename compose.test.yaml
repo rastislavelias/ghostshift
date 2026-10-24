@@ -1,5 +1,11 @@
 # Tests replace inference only. No model downloads or paid API calls.
 services:
+  console:
+    environment:
+      DEVELOPER_REPOSITORY: ghostshift/test-fixture
+  developer:
+    environment:
+      GHOSTSHIFT_TEST_FIXTURE: "1"
   ollama:
     image: ghostshift-provider-fixture
     build:

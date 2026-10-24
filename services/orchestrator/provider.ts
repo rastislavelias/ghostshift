@@ -17,14 +17,15 @@ Approval is exclusively a human action. Revise the previous plan according to fe
 export type Usage = { input: number | null; output: number | null };
 const tokenCount = (value: unknown) => typeof value === 'number' && Number.isSafeInteger(value) && value >= 0 ? value : null;
 
-export async function generatePlan(job: { provider: string; model: string; input: unknown; max_output_tokens: number }, signal: AbortSignal) {
+async function generateDocument<T>(spec: { schema: object; instructions: string; parse: (value: unknown) => T; name: string }, job: { provider: string; model: string; input: unknown; max_output_tokens: number }, signal: AbortSignal) {
   try { selectModel(job.provider, job.model); } catch { throw new ProviderError('provider_not_configured', false); }
+  const { schema, instructions } = spec;
   const input = JSON.stringify(job.input);
   if (input.length > 32000) throw new ProviderError('input_limit', false);
   let url: string; let headers: Record<string, string> = { 'Content-Type': 'application/json' }; let body: unknown;
   if (job.provider === 'ollama') {
     url = `${(process.env.OLLAMA_BASE_URL || 'http://ollama:11434').replace(/\/$/, '')}/api/chat`;
-    body = { model: job.model, stream: false, think: false, format: planSchema,
+    body = { model: job.model, stream: false, think: false, format: schema,
       messages: [{ role: 'system', content: instructions }, { role: 'user', content: input }],
       options: { temperature: 0.2, num_predict: job.max_output_tokens, num_ctx: 16384 }, keep_alive: '5m' };
   } else if (job.provider === 'openai') {
@@ -32,14 +33,14 @@ export async function generatePlan(job: { provider: string; model: string; input
     headers.Authorization = `Bearer ${process.env.OPENAI_API_KEY}`;
     body = { model: job.model, store: false, instructions, input,
       max_output_tokens: job.max_output_tokens,
-      text: { format: { type: 'json_schema', name: 'project_plan', strict: true, schema: planSchema } } };
+      text: { format: { type: 'json_schema', name: spec.name, strict: true, schema } } };
   } else {
     const base = new URL(process.env.COMPATIBLE_BASE_URL!);
     if (base.protocol !== 'https:') throw new ProviderError('compatible_requires_https', false);
     url = `${base.toString().replace(/\/$/, '')}/chat/completions`;
     headers.Authorization = `Bearer ${process.env.COMPATIBLE_API_KEY}`;
     body = { model: job.model, stream: false, max_tokens: job.max_output_tokens,
-      messages: [{ role: 'system', content: `${instructions}\nJSON schema: ${JSON.stringify(planSchema)}` }, { role: 'user', content: input }],
+      messages: [{ role: 'system', content: `${instructions}\nJSON schema: ${JSON.stringify(schema)}` }, { role: 'user', content: input }],
       response_format: { type: 'json_object' } };
   }
   let response: Response;
@@ -74,7 +75,12 @@ export async function generatePlan(job: { provider: string; model: string; input
     text = data.choices?.[0]?.message?.content;
     usage = { input: tokenCount(data.usage?.prompt_tokens), output: tokenCount(data.usage?.completion_tokens) };
   }
-  try { return { content: parsePlan(JSON.parse(String(text))), usage }; }
-  catch { throw new ProviderError('invalid_plan', true); }
+  try { return { content: spec.parse(JSON.parse(String(text))), usage }; }
+  catch { throw new ProviderError(`invalid_${spec.name === 'project_plan' ? 'plan' : 'change'}`, true); }
 }
 export const requestTimeout = () => boundedNumber(process.env.PLANNER_TIMEOUT_SECONDS, 240, 10, 600) * 1000;
+
+export function generatePlan(job: Parameters<typeof generateDocument>[1], signal: AbortSignal) {
+  return generateDocument({ schema: planSchema, instructions, parse: parsePlan, name: 'project_plan' }, job, signal);
+}
+export { generateDocument };

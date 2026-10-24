@@ -24,10 +24,12 @@ RUN npm prune --omit=dev --ignore-scripts
 FROM base AS worker
 WORKDIR /app
 ENV NODE_ENV=production
-RUN addgroup -S -g 1001 ghostshift && adduser -S -u 1001 -G ghostshift ghostshift
+RUN apk add --no-cache git && addgroup -S -g 1001 ghostshift && adduser -S -u 1001 -G ghostshift ghostshift
 COPY --from=worker-dependencies --chown=ghostshift:ghostshift /app/node_modules ./node_modules
 COPY --from=build --chown=ghostshift:ghostshift /app/dist ./worker
 COPY package.json ./
+COPY examples/playground ./examples/playground
+RUN mkdir -p /fixtures && git init --bare /fixtures/playground.git && git -C /fixtures/playground.git --work-tree=/app/examples/playground add . && git -C /fixtures/playground.git -c user.name=Fixture -c user.email=fixture@example.invalid --work-tree=/app/examples/playground commit -m "Trusted playground fixture" && chown -R ghostshift:ghostshift /fixtures
 USER ghostshift
 CMD ["node", "worker/services/orchestrator/worker.js"]
 

@@ -6,6 +6,8 @@ import { modelCatalog, outputLimit, attemptLimit } from '@/lib/providers';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProjectWorkflow } from './workflow';
+import { DevelopmentWorkflow } from './development';
+import { developmentRepository } from '@/lib/development-contract';
 export const dynamic = 'force-dynamic';
 export default async function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -21,5 +23,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
     <Card><CardHeader><CardTitle><h2>Original brief</h2></CardTitle></CardHeader>
       <CardContent><p className="text-sm leading-relaxed whitespace-pre-wrap wrap-anywhere">{project.brief}</p></CardContent></Card>
     <ProjectWorkflow key={project.revision} project={JSON.parse(JSON.stringify(project))} models={modelCatalog()} outputLimit={outputLimit()} attemptLimit={attemptLimit()} />
+    <DevelopmentWorkflow key={`development-${project.revision}`} project={JSON.parse(JSON.stringify(project))} models={modelCatalog()} repository={developmentRepository()} />
   </main>;
 }

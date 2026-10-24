@@ -55,7 +55,7 @@ try {
   }
   await checkProject();
   assert.equal(sql('SELECT name FROM schema_migrations;'), '001_projects.sql');
-  assert.equal(sql('SELECT count(*) FROM _prisma_migrations WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL;'), '2');
+  assert.equal(sql('SELECT count(*) FROM _prisma_migrations WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL;'), '3');
   assert.equal(sql("SELECT count(*) FROM pg_constraint WHERE conrelid = 'projects'::regclass AND contype = 'c' AND convalidated;"), '5');
   compose(['down']);
   compose(['up', '-d', '--wait']);

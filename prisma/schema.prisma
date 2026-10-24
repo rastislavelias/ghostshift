@@ -23,6 +23,7 @@ model Project {
   plans            ProjectPlan[]
   jobs             PlanningJob[]
   events           ProjectEvent[]
+  development_jobs DevelopmentJob[]
 
   @@map("projects")
 }
@@ -45,6 +46,7 @@ model ProjectPlan {
   created_at DateTime @default(now()) @db.Timestamptz(6)
 
   approved_projects Project[] @relation("ApprovedPlan")
+  development_jobs DevelopmentJob[]
 
   @@unique([project_id, version])
   @@map("project_plans")
@@ -100,4 +102,53 @@ model ProjectEvent {
 
   @@index([project_id, created_at])
   @@map("project_events")
+}
+
+model DevelopmentJob {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  project_id String @db.Uuid
+  project Project @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  plan_id String @db.Uuid
+  plan ProjectPlan @relation(fields: [plan_id], references: [id], onDelete: NoAction)
+  task String @db.Text
+  criteria String @db.Text
+  repository String @db.Text
+  base_commit String? @db.Text
+  provider String @db.Text
+  model String @db.Text
+  status String @default("queued") @db.Text
+  attempts Int @default(0)
+  max_attempts Int @default(2)
+  max_output_tokens Int @default(4096)
+  lease_owner String? @db.Uuid
+  lease_until DateTime? @db.Timestamptz(6)
+  error String? @db.Text
+  summary String? @db.Text
+  files Json?
+  patch String? @db.Text
+  checks Json?
+  feedback String? @db.Text
+  parent_job_id String? @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  finished_at DateTime? @db.Timestamptz(6)
+  runs DevelopmentAttempt[]
+  @@index([status, created_at])
+  @@map("development_jobs")
+}
+
+model DevelopmentAttempt {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  job_id String @db.Uuid
+  job DevelopmentJob @relation(fields: [job_id], references: [id], onDelete: Cascade)
+  number Int
+  status String @default("running") @db.Text
+  input_tokens Int?
+  output_tokens Int?
+  duration_ms Int?
+  error String? @db.Text
+  checks Json?
+  started_at DateTime @default(now()) @db.Timestamptz(6)
+  finished_at DateTime? @db.Timestamptz(6)
+  @@unique([job_id, number])
+  @@map("development_attempts")
 }
