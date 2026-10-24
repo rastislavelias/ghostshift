@@ -1,0 +1,30 @@
+{
+  "name": "ghostshift",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "One human. A team of AI agents. From idea to deployment.",
+  "engines": { "node": ">=24 <25" },
+  "scripts": {
+    "dev": "next dev apps/console",
+    "build": "next build apps/console",
+    "start": "next start apps/console",
+    "typecheck": "tsc --noEmit -p apps/console/tsconfig.json",
+    "test": "node --test tests/*.test.mjs",
+    "db:migrate": "node scripts/migrate.mjs",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "dependencies": {
+    "next": "16.4.3",
+    "pg": "8.23.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/pg": "8.23.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "5.9.3"
+  }
+}

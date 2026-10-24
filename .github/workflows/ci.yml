@@ -1,0 +1,47 @@
+name: Foundation checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: npm run typecheck
+      - name: Start isolated stack
+        run: docker compose -p ghostshift-ci up --build -d --wait
+      - run: npm run smoke
+      - name: Verify restart persistence
+        run: |
+          project_id=$(curl --fail --silent http://127.0.0.1:3000/api/projects | node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>process.stdout.write(JSON.parse(s).projects[0].id))")
+          docker compose -p ghostshift-ci down
+          docker compose -p ghostshift-ci up -d --wait
+          curl --fail --silent http://127.0.0.1:3000/api/projects | PROJECT_ID="$project_id" node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{if(!JSON.parse(s).projects.some(p=>p.id===process.env.PROJECT_ID))process.exit(1)})"
+      - name: Verify backup and recovery on the disposable stack
+        run: |
+          docker compose -p ghostshift-ci exec -T database pg_dump -U ghostshift -d ghostshift -Fc > "$RUNNER_TEMP/ghostshift.dump"
+          docker compose -p ghostshift-ci down -v
+          docker compose -p ghostshift-ci up -d --wait database
+          docker compose -p ghostshift-ci exec -T database pg_restore -U ghostshift -d ghostshift --no-owner --exit-on-error < "$RUNNER_TEMP/ghostshift.dump"
+          docker compose -p ghostshift-ci up -d --wait
+          curl --fail --silent http://127.0.0.1:3000/api/projects | node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{if(!JSON.parse(s).projects.some(p=>p.name==='Smoke test'))process.exit(1)})"
+      - name: Collect logs
+        if: failure()
+        run: docker compose -p ghostshift-ci logs --no-color
+      - name: Remove disposable CI stack
+        if: always()
+        run: docker compose -p ghostshift-ci down -v
