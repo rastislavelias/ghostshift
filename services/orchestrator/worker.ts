@@ -18,14 +18,16 @@ async function recoverExpired() {
   for (const job of expired) {
     await database.$transaction(async tx => {
       await lockProject(tx, job.project_id);
-      const updated = await tx.planningJob.updateMany({ where: { id: job.id, status: 'running', lease_until: { lt: new Date() } }, data: {
-        status: job.attempts >= job.max_attempts ? 'failed' : 'queued', lease_owner: null, lease_until: null,
-        available_at: new Date(), error: 'worker_interrupted', finished_at: job.attempts >= job.max_attempts ? new Date() : null,
+      const currentJob = await tx.planningJob.findUniqueOrThrow({ where: { id: job.id } });
+      const exhausted = currentJob.attempts >= currentJob.max_attempts;
+      const updated = await tx.planningJob.updateMany({ where: { id: job.id, status: 'running', lease_owner: currentJob.lease_owner, lease_until: { lt: new Date() } }, data: {
+        status: exhausted ? 'failed' : 'queued', lease_owner: null, lease_until: null,
+        available_at: new Date(), error: 'worker_interrupted', finished_at: exhausted ? new Date() : null,
       } });
       if (!updated.count) return;
       await tx.planningAttempt.updateMany({ where: { job_id: job.id, status: 'running' }, data: { status: 'interrupted', error: 'worker_interrupted', finished_at: new Date() } });
-      if (job.attempts >= job.max_attempts) await releaseProject(tx, job.project_id);
-      await tx.projectEvent.create({ data: { project_id: job.project_id, kind: 'worker_recovered', detail: { jobId: job.id, retry: job.attempts < job.max_attempts } } });
+      if (exhausted) await releaseProject(tx, job.project_id);
+      await tx.projectEvent.create({ data: { project_id: job.project_id, kind: 'worker_recovered', detail: { jobId: job.id, retry: !exhausted } } });
     });
   }
 }
