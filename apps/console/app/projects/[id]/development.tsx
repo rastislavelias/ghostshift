@@ -44,7 +44,7 @@ export function DevelopmentWorkflow({ project, models, repository }: { project: 
   return <Card><CardHeader><CardTitle><h2>Development workspace</h2></CardTitle></CardHeader><CardContent className="space-y-6">
     <p className="text-sm text-muted-foreground">One approved task → developer → checks → bounded repair → your review. LangGraph coordinates the loop. Acceptance records your decision; applying the patch, merging and deployment are separate actions.</p>
     <p className="text-sm">Target: {repository ? <a className="text-primary underline" href={`https://github.com/${repository}`} target="_blank" rel="noreferrer">{repository}</a> : 'Not configured'}. This first version changes only <code>app/page.tsx</code> and <code>app/globals.css</code>. Dependencies and check commands are fixed.</p>
-    {project.status !== 'approved' ? <p className="text-sm">Approve a plan to enable development.</p> : latest?.status === 'awaiting_review' ? <p className="text-sm">Review the latest result below before starting another task.</p> : !active && repository ? <div className="space-y-4">
+    {project.status !== 'approved' ? <p className="text-sm">Approve a plan to enable development.</p> : latest?.status === 'awaiting_review' && latest.plan_id === project.approved_plan_id ? <p className="text-sm">Review the latest result below before starting another task.</p> : !active && repository ? <div className="space-y-4">
       <details className="text-sm"><summary className="cursor-pointer text-primary">View approved tasks and criteria</summary><div className="mt-3 space-y-3 whitespace-pre-wrap wrap-anywhere"><p>{plan?.content.tasks}</p><p>{plan?.content.acceptanceCriteria}</p></div></details>
       {revising && <p className="text-sm whitespace-pre-wrap">Requested revision: {latest.feedback}</p>}
       <div className="space-y-2"><Label htmlFor="development-task">One task from the approved plan</Label><Textarea id="development-task" value={task} onChange={e => setTask(e.target.value)} maxLength={3000} disabled={pending || revising} placeholder="For example: build a responsive landing page with a hero and three feature cards." /></div>
@@ -69,6 +69,7 @@ export function DevelopmentWorkflow({ project, models, repository }: { project: 
         <Label htmlFor="development-feedback">Revision feedback</Label><Textarea id="development-feedback" value={feedback} onChange={e => setFeedback(e.target.value)} maxLength={4000} disabled={pending} />
         <div className="flex flex-wrap gap-3"><Button disabled={pending} onClick={() => submit('accept')}>Accept result</Button><Button variant="outline" disabled={pending || !feedback.trim()} onClick={() => submit('request_changes')}>Request changes</Button></div>
       </div>}
+      {job.status === 'awaiting_review' && job.plan_id !== project.approved_plan_id && <p className="text-sm text-muted-foreground">This result belongs to an earlier plan and cannot be accepted under the current approval.</p>}
       {job.feedback && <p className="text-sm whitespace-pre-wrap wrap-anywhere">Review feedback: {job.feedback}</p>}
     </section>)}
   </CardContent></Card>;

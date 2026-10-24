@@ -74,4 +74,22 @@ await api(`/api/projects/${project.id}/workflow`, { action: 'request_changes', r
 await sleep(4000); project = await detail(project.id);
 await dev({ action: 'accept', jobId: job.id }, 409);
 assert.ok(['failed', 'cancelled'].includes(project.development_jobs[0].status));
-console.log('Development integration passed: approval gating, concurrency, real compile/test/build, repair, patch, revision, acceptance, exhaustion, cancellation, worker recovery (when configured) and revoked approval.');
+// A result for an obsolete plan stays historical and must not block the newly approved plan.
+project = (await api('/api/projects', { name: `Superseded result ${idSuffix}`, brief: 'A tiny status page.' }, 201)).project;
+await api(`/api/projects/${project.id}/workflow`, { action: 'generate', revision: project.revision, provider: 'ollama', model: 'qwen3:4b' });
+project = await wait(project.id, p => p.status === 'awaiting_review');
+await api(`/api/projects/${project.id}/workflow`, { action: 'approve', revision: project.revision, planId: project.plans[0].id });
+project = await detail(project.id);
+await dev({ action: 'start', provider: 'ollama', model: 'qwen3:4b', task: 'Build the old plan page.', criteria: 'A useful main heading.' });
+project = await wait(project.id, p => ['awaiting_review','failed'].includes(p.development_jobs[0]?.status));
+assert.equal(project.development_jobs[0].status, 'awaiting_review');
+const obsoleteJob = project.development_jobs[0].id;
+await api(`/api/projects/${project.id}/workflow`, { action: 'save', revision: project.revision, planId: project.plans[0].id, content: { ...project.plans[0].content, scope: 'A revised status page scope.' } });
+project = await detail(project.id);
+await api(`/api/projects/${project.id}/workflow`, { action: 'approve', revision: project.revision, planId: project.plans[0].id });
+project = await detail(project.id);
+await dev({ action: 'accept', jobId: obsoleteJob }, 409);
+await dev({ action: 'start', provider: 'ollama', model: 'qwen3:4b', task: '[slow] Build the new plan page.', criteria: 'The newly approved scope.' });
+project = await detail(project.id);
+await dev({ action: 'cancel', jobId: project.development_jobs[0].id });
+console.log('Development integration passed: approval gating, concurrency, real compile/test/build, repair, patch, revision, acceptance, exhaustion, cancellation, worker recovery (when configured), revoked approval and superseded result handling.');
