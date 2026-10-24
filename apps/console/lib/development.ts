@@ -22,6 +22,7 @@ export async function changeDevelopment(id: string, body: Record<string, unknown
       if (project.status !== 'approved' || !project.approved_plan_id || body.planId !== project.approved_plan_id) throw new WorkflowError('Approve the current plan before developing or reviewing a result.', 409);
       if (body.action === 'start') {
         if (active) throw new WorkflowError('A development job is already active.', 409);
+        if (latest?.status === 'awaiting_review') throw new WorkflowError('Accept the latest result or request changes before starting another task.', 409);
         const repository = developmentRepository();
         if (!repository) throw new WorkflowError('Configure DEVELOPER_REPOSITORY on the server first.', 409);
         let selected; try { selected = selectModel(body.provider, body.model); } catch { throw new WorkflowError('Select a configured model.'); }

@@ -27,6 +27,7 @@ await dev({ action: 'start', provider: 'ollama', model: 'qwen3:4b', task: '[repa
 await dev({ action: 'start', provider: 'ollama', model: 'qwen3:4b', task: 'Duplicate', criteria: 'No duplicate jobs.' }, 409);
 project = await wait(project.id, p => ['awaiting_review', 'failed'].includes(p.development_jobs[0]?.status));
 let job = project.development_jobs[0];
+await dev({ action: 'start', provider: 'ollama', model: 'qwen3:4b', task: 'Skip review', criteria: 'Must wait for review.' }, 409);
 assert.equal(job.status, 'awaiting_review', JSON.stringify(job));
 assert.equal(job.attempts, 2); assert.equal(job.runs[0].status, 'failed'); assert.equal(job.runs[1].status, 'succeeded');
 assert.equal(job.checks.length, 3); assert.ok(job.checks.every(c => c.passed));
@@ -64,6 +65,8 @@ if (process.env.TEST_COMPOSE_PROJECT) {
   assert.equal(project.development_jobs[0].status, 'awaiting_review');
   assert.equal(project.development_jobs[0].attempts, 2);
   assert.equal(project.development_jobs[0].runs[0].status, 'interrupted');
+  await dev({ action: 'accept', jobId: project.development_jobs[0].id });
+  project = await detail(project.id);
 }
 // Revoking approval cancels active work and prevents accepting an old result.
 await dev({ action: 'start', provider: 'ollama', model: 'qwen3:4b', task: '[slow] approval revoked', criteria: 'heading' }); project = await wait(project.id, p => p.development_jobs[0]?.status === 'running' && p.development_jobs[0].attempts === 1);
