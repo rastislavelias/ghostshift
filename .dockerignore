@@ -1,5 +1,6 @@
 .git
 node_modules
+apps/console/generated
 **/.next
 .env
 .env.*

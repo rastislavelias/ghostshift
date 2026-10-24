@@ -11,7 +11,9 @@ Keep that distinction explicit in code, UI, documentation, and PR descriptions.
 - `apps/console`: Next.js App Router UI and HTTP API, written in TypeScript.
 - `apps/console/components/ui`: shadcn/ui components; use Tailwind utilities and the semantic
   theme tokens in `app/globals.css`. See `docs/ui.md`. Preserve accessible labels and states.
-- `db/migrations`: ordered SQL migrations applied by `scripts/migrate.mjs`.
+- `prisma/schema.prisma`: database models; `prisma/migrations`: ordered Prisma migrations.
+- `prisma/baseline.prisma` and `db/migrations`: immutable legacy upgrade reference.
+- `scripts/migrate.mjs`: guarded legacy adoption, then Prisma Migrate deployment.
 - `services/orchestrator`: future execution boundary; do not invent an idle worker.
 - `docs`: architecture, operations, roadmap, and validation evidence.
 
@@ -22,7 +24,8 @@ Keep that distinction explicit in code, UI, documentation, and PR descriptions.
 3. Keep the console loopback-only and the database unpublished until authentication and an
    explicit exposure plan are implemented. Do not mount the Docker socket into application containers.
 4. Use parameterized SQL, validate external input, and keep errors free of secrets.
-5. Add new numbered SQL migrations; never rewrite a migration already released.
+5. Add new timestamped Prisma migrations; never rewrite a released migration or baseline.
+   Review generated SQL and preserve PostgreSQL CHECK constraints, which Prisma does not model.
 6. Keep long-running model and coding work out of web requests. Future workers need
    persisted jobs, retry limits, execution isolation, and cancellation.
 7. Never commit credentials, `.env`, database dumps, client data, or local machine identifiers.
@@ -39,4 +42,6 @@ Run `npm ci`, `npm test`, `npm run build`, and `npm run typecheck` (the build ge
 For startup, schema, API or persistence changes, build a disposable Compose project and run
 `npm run smoke`, then verify a saved project's ID survives `down` and a subsequent `up`.
 Do not run destructive cleanup against an existing user workspace. Record what was actually
-tested, including architecture and any missing checks. Keep docs consistent with behavior.
+tested, including architecture and any missing checks. For database changes also run
+`npm run test:upgrade` on a Docker host; it owns only the disposable `ghostshift-upgrade-test`
+project and refuses an existing test volume. Keep docs consistent with behavior.

@@ -2,7 +2,9 @@ name: ghostshift
 
 services:
   console:
-    build: .
+    build:
+      context: .
+      target: runner
     restart: unless-stopped
     init: true
     ports:
@@ -18,12 +20,32 @@ services:
     depends_on:
       database:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 10s
       timeout: 5s
       retries: 6
       start_period: 30s
+    security_opt:
+      - no-new-privileges:true
+
+  migrate:
+    build:
+      context: .
+      target: migrator
+    restart: "no"
+    init: true
+    environment:
+      PGHOST: database
+      PGPORT: "5432"
+      PGDATABASE: ghostshift
+      PGUSER: ghostshift
+      PGPASSWORD: ${POSTGRES_PASSWORD:-ghostshift-local-only}
+    depends_on:
+      database:
+        condition: service_healthy
     security_opt:
       - no-new-privileges:true
 

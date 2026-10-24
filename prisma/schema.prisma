@@ -1,0 +1,26 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../apps/console/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Project {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String   @db.Text
+  brief      String   @db.Text
+  status     String   @default("draft") @db.Text
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("projects")
+}
+
+// Keep the original migration history. New migrations use _prisma_migrations.
+model LegacySchemaMigration {
+  name       String   @id @db.Text
+  applied_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("schema_migrations")
+}

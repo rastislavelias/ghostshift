@@ -42,6 +42,8 @@ jobs:
       - name: Collect logs
         if: failure()
         run: docker compose -p ghostshift-ci logs --no-color
+      - name: Verify legacy upgrade and schema drift rejection
+        run: npm run test:upgrade
       - name: Remove disposable CI stack
         if: always()
         run: docker compose -p ghostshift-ci down -v

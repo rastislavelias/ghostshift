@@ -1,27 +1,21 @@
-import { Pool } from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient, type Project } from '../generated/prisma/client';
 
-const globalDatabase = globalThis as unknown as { ghostshiftPool?: Pool };
+const globalDatabase = globalThis as unknown as { ghostshiftPrisma?: PrismaClient };
 
-export const database = globalDatabase.ghostshiftPool ?? new Pool({
-  max: 5,
-  connectionTimeoutMillis: 5_000,
-  idleTimeoutMillis: 30_000,
+export const database = globalDatabase.ghostshiftPrisma ?? new PrismaClient({
+  adapter: new PrismaPg({
+    connectionString: process.env.DATABASE_URL,
+    max: 5,
+    connectionTimeoutMillis: 5_000,
+    idleTimeoutMillis: 30_000,
+  }),
 });
 
-globalDatabase.ghostshiftPool = database;
-database.on('error', () => console.error('An idle database connection failed.'));
+globalDatabase.ghostshiftPrisma = database;
 
-export type Project = {
-  id: string;
-  name: string;
-  brief: string;
-  status: 'draft';
-  created_at: Date;
-};
+export type { Project };
 
 export async function listProjects(): Promise<Project[]> {
-  const result = await database.query<Project>(
-    'SELECT id, name, brief, status, created_at FROM projects ORDER BY created_at DESC LIMIT 50'
-  );
-  return result.rows;
+  return database.project.findMany({ orderBy: { created_at: 'desc' }, take: 50 });
 }

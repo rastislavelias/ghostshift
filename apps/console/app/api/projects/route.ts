@@ -31,11 +31,8 @@ export async function POST(request: Request) {
     return Response.json({ error: error instanceof Error ? error.message : 'Invalid project.' }, { status: 400 });
   }
   try {
-    const result = await database.query(
-      'INSERT INTO projects (name, brief) VALUES ($1, $2) RETURNING id, name, brief, status, created_at',
-      [project.name, project.brief]
-    );
-    return Response.json({ project: result.rows[0] }, { status: 201 });
+    const saved = await database.project.create({ data: project });
+    return Response.json({ project: saved }, { status: 201 });
   } catch {
     return Response.json({ error: 'Project could not be saved. Try again shortly.' }, { status: 503 });
   }

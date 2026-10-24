@@ -52,3 +52,23 @@ result for the current commit rather than treating this dated record as a perman
 These checks are not a full accessibility audit. Database migrations and API behavior
 were unchanged. Runtime checks used disposable synthetic data; this was not a permanent
 server deployment.
+
+## Prisma migration — 2026-10-24
+
+- Clean lockfile installation reported zero known vulnerabilities. Existing unit tests,
+  Prisma client generation, Next.js production build, and TypeScript check passed on macOS arm64.
+- Linux amd64 Docker builds and standard Compose startup passed with the one-shot Prisma
+  migration service and standalone console runtime. Fresh startup applied the baseline.
+- HTTP/API smoke checks passed for health, validation, cross-origin rejection, creation,
+  listing, and rendering through Prisma Client.
+- The upgrade integration test rejected a missing CHECK constraint and an unexpected column
+  before baseline adoption. After restoring the original schema, it preserved a synthetic
+  project's UUID, name, brief, status, and timestamp through the API and a container restart.
+  Legacy history, one applied Prisma baseline, and three validated CHECK constraints remained.
+- A PostgreSQL custom-format backup was restored into a new disposable volume. Startup
+  succeeded and the original smoke project's UUID was still returned through the API.
+
+Tests used isolated Compose projects with synthetic data on Linux amd64. No existing user
+database was upgraded and no permanent deployment was created. The arm64 Docker image was
+not run. UI styling was unchanged; no new visual or full accessibility audit was performed.
+The CI workflow also runs the legacy upgrade checks for subsequent commits.

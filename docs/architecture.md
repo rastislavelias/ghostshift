@@ -1,14 +1,17 @@
 # Architecture: foundation
 
-The first release deliberately has two running services:
+The foundation has two long-running services and one startup migration task:
 
 1. **Console**: Next.js + TypeScript, with Tailwind CSS 4 and shadcn/ui. Renders drafts and exposes `/api/projects` and
-   `/api/health`. It does not execute prompts or shell commands.
+   `/api/health`. Database access uses Prisma Client with the PostgreSQL driver adapter.
+   It does not execute prompts or shell commands.
 2. **Database**: PostgreSQL 17 with a named Docker volume. Owns project briefs and the
    migration history. No host port is published.
 
-The console waits for database readiness and applies unapplied SQL migrations before
-starting. The health endpoint checks the projects table, not just the HTTP process.
+3. **Migrate**: a one-shot container that validates/adopts the legacy schema when needed
+   and runs `prisma migrate deploy`. The CLI stays out of the console runtime image.
+
+The console waits for database readiness and successful completion of the migration task. The health endpoint checks the projects table, not just the HTTP process.
 The application image uses a multi-stage build and runs as an unprivileged user.
 The Node 24 base image is pinned to a multi-platform index digest. Dependency versions are
 resolved by `package-lock.json`; update the base digest deliberately when adopting security
@@ -36,7 +39,11 @@ The database remains the source of truth, independent of model conversations.
 ## Data model
 
 `projects`: UUID, name, brief, draft status, creation time.
-`schema_migrations`: migration filename and application time.
+`_prisma_migrations`: Prisma migration history.
+`schema_migrations`: retained legacy history, no longer used to apply new migrations.
+
+The Prisma model maps to the original table and column names. Database defaults, UUIDs,
+timestamps, and CHECK constraints remain intact. See [database workflow](database.md).
 
 The homepage and listing API show the most recent 50 projects. There is no edit/delete
 workflow or pagination yet. New projects are not silently seeded on startup.
