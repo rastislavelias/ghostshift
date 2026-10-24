@@ -63,7 +63,7 @@ If dependencies/configuration change, update the trusted template and executor i
   or a compatible Docker Desktop Linux VM; restricted/rootless Docker setups may reject it.
 - Fixed checks run sequentially with a three-minute combined deadline, 3 GiB RAM, two CPUs,
   128 container processes and additional child resource limits. Source changes during checks
-  are rejected; test logs are bounded. All sandbox-UID processes are killed between requests.
+  are rejected; test logs are bounded. All sandbox-UID processes are killed and both temporary filesystems are cleared between requests.
 - Authentication protects the unpublished control API. The public starter token is a local
   development default; set a random `EXECUTOR_TOKEN` in a private deployment `.env`.
 

@@ -25,6 +25,14 @@ def kill_children():
             if uid == '1001': os.kill(int(entry.name), signal.SIGKILL)
         except (OSError, StopIteration): pass
 
+def clear_workspace():
+    # Both tmpfs mounts may contain generated source or temporary client data.
+    # Clear them between requests, after all sandbox processes have been killed.
+    for directory in (ROOT, pathlib.Path('/tmp')):
+        for item in directory.iterdir():
+            if item.is_dir() and not item.is_symlink(): shutil.rmtree(item)
+            else: item.unlink()
+
 def run_check(name, command, deadline):
     started = time.monotonic()
     # No provider, database or supervisor secrets are inherited by generated code.
@@ -59,9 +67,7 @@ def execute(data):
         state['id'] = run_id
         state['cancel'].clear()
         kill_children()
-        for item in ROOT.iterdir():
-            if item.is_dir() and not item.is_symlink(): shutil.rmtree(item)
-            else: item.unlink()
+        clear_workspace()
         project = ROOT / 'project'
         project.mkdir()
         for name, content in files.items():
@@ -88,8 +94,11 @@ def execute(data):
         return {'checks': checks, 'passed': len(checks) == 3 and all(c['passed'] for c in checks)}
     finally:
         kill_children()
-        state['id'] = None
-        lock.release()
+        try:
+            clear_workspace()
+        finally:
+            state['id'] = None
+            lock.release()
 
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, *_): pass
