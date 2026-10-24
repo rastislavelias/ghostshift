@@ -111,7 +111,7 @@ protection, project creation, listing, and rendering. Use a test workspace, not 
 
 See [architecture](docs/architecture.md), [next milestone](docs/roadmap.md), and
 [validation](docs/validation.md). Repo documentation is in English for contributors and
-portfolio reviewers; a [Slovak quick start](docs/quickstart.sk.md) is also included.
+portfolio reviewers.
 
 ## AI-assisted development
 
