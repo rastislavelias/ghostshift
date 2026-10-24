@@ -18,6 +18,24 @@ COPY scripts/migrate.mjs scripts/database-url.mjs ./scripts/
 USER node
 CMD ["node", "scripts/migrate.mjs"]
 
+FROM dependencies AS worker-dependencies
+RUN npm prune --omit=dev --ignore-scripts
+
+FROM base AS worker
+WORKDIR /app
+ENV NODE_ENV=production
+RUN addgroup -S -g 1001 ghostshift && adduser -S -u 1001 -G ghostshift ghostshift
+COPY --from=worker-dependencies --chown=ghostshift:ghostshift /app/node_modules ./node_modules
+COPY --from=build --chown=ghostshift:ghostshift /app/dist ./worker
+COPY package.json ./
+USER ghostshift
+CMD ["node", "worker/services/orchestrator/worker.js"]
+
+FROM base AS fixture
+WORKDIR /app
+COPY tests/fixtures/provider.mjs ./provider.mjs
+ENTRYPOINT ["node", "provider.mjs"]
+
 FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=0.0.0.0 PORT=3000

@@ -47,7 +47,7 @@ ssh -N -L 3000:127.0.0.1:3000 your-user@your-server
 ```
 
 If local port 3000 is already occupied, use `-L 3001:127.0.0.1:3000` and browse port 3001.
-Inspect `docker compose ps` and `docker compose logs --tail=100 console migrate database`.
+Inspect `docker compose ps` and `docker compose logs --tail=100 console worker migrate model-init ollama database`.
 If startup fails because the host port is occupied, set `GHOSTSHIFT_PORT` in `.env`.
 If PostgreSQL credentials mismatch, check the credentials used when the volume was created.
 Do not publish port 5432 or bind the console to all interfaces as a troubleshooting shortcut.
@@ -59,3 +59,15 @@ history, table structure, and original CHECK constraints before recording a Pris
 It does not recreate tables or delete briefs. An unrecognized schema blocks startup; inspect
 `docker compose logs migrate` and [database development](database.md) instead of resetting
 the database. Keep the original Compose project name and volume.
+
+## Planner services and model storage
+
+The worker and dedicated Ollama use `restart: unless-stopped`. `migrate` and `model-init`
+are one-shot tasks; an exit code of zero is expected. The model is stored in the separate
+`ollama-data` volume and survives container recreation. Model initialization waits for
+Ollama health and reuses an already installed model. API calls begin only after a planning
+request. See [workflow configuration](workflow.md) for GPU, providers, and request limits.
+
+Project backups now include plans, jobs, attempts, approvals, and activity. Before schema
+updates, take a database backup using the same pg_dump command. Preserve `.env` separately
+and securely; it contains credentials. Model weights can be downloaded again after reinstall.

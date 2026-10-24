@@ -1,5 +1,5 @@
 import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient, type Project } from '../generated/prisma/client';
+import { PrismaClient, type Project } from '../generated/prisma/client.ts';
 
 const globalDatabase = globalThis as unknown as { ghostshiftPrisma?: PrismaClient };
 

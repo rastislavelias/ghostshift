@@ -12,6 +12,10 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      COMPOSE_FILE: compose.yaml:compose.test.yaml
+      GHOSTSHIFT_TEST_FIXTURE: "1"
+      TEST_COMPOSE_PROJECT: ghostshift-ci
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -25,6 +29,7 @@ jobs:
       - name: Start isolated stack
         run: docker compose -p ghostshift-ci up --build -d --wait
       - run: npm run smoke
+      - run: npm run test:workflow
       - name: Verify restart persistence
         run: |
           project_id=$(curl --fail --silent http://127.0.0.1:3000/api/projects | node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>process.stdout.write(JSON.parse(s).projects[0].id))")

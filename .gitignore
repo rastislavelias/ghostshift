@@ -9,3 +9,6 @@ apps/console/generated/
 .DS_Store
 backups/
 coverage/
+
+dist/
+compose.local.yaml

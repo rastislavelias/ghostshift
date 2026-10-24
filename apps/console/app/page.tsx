@@ -1,3 +1,5 @@
+import Link from 'next/link';
+import { statusLabels } from '@/lib/planning-contract';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { listProjects, type Project } from '@/lib/db';
@@ -34,7 +36,7 @@ export default async function Home() {
           <span className={cn('size-1.5 rounded-full', connected ? 'bg-primary' : 'bg-destructive')} aria-hidden="true" />
           {connected ? 'Workspace ready' : 'Database unavailable'}
           <span className="mx-1 text-muted-foreground/50" aria-hidden="true">/</span>
-          Agent execution not connected
+          Project planning · Human approval
         </div>
       </section>
 
@@ -76,8 +78,8 @@ export default async function Home() {
                 {projects.map(project => (
                   <li key={project.id} className="py-4.5 first:pt-0">
                     <div className="flex items-start justify-between gap-4">
-                      <h3 className="text-base font-medium wrap-anywhere">{project.name}</h3>
-                      <Badge variant="outline" className="shrink-0 rounded-sm border-status-border px-2 py-1 font-mono text-[10px] font-normal text-primary">Draft</Badge>
+                      <h3 className="text-base font-medium wrap-anywhere"><Link href={`/projects/${project.id}`} className="rounded hover:text-primary focus-visible:ring-2 focus-visible:ring-ring">{project.name} ↗</Link></h3>
+                      <Badge variant="outline" className="shrink-0 rounded-sm border-status-border px-2 py-1 font-mono text-[10px] font-normal text-primary">{statusLabels[project.status] || project.status}</Badge>
                     </div>
                     <p className="my-3 max-h-40 overflow-auto text-[13px] leading-[1.7] whitespace-pre-wrap text-muted-foreground wrap-anywhere">{project.brief}</p>
                     <time className="font-mono text-[10px] text-muted-foreground" dateTime={project.created_at.toISOString()}>{project.created_at.toISOString().slice(0, 10)}</time>

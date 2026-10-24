@@ -30,6 +30,7 @@ export function ProjectForm() {
       if (!response.ok) throw new Error(result.error ?? 'Project could not be saved.');
       form.reset();
       setSaved(true);
+      router.push(`/projects/${result.project.id}`);
       router.refresh();
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Connection failed. Please try again.');

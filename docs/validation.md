@@ -72,3 +72,21 @@ Tests used isolated Compose projects with synthetic data on Linux amd64. No exis
 database was upgraded and no permanent deployment was created. The arm64 Docker image was
 not run. UI styling was unchanged; no new visual or full accessibility audit was performed.
 The CI workflow also runs the legacy upgrade checks for subsequent commits.
+
+## Project planning and approval — 2026-10-24
+
+- Unit checks passed for complete/bounded plan documents, configured-model allowlists,
+  structured provider requests, token normalization, incomplete responses, and sanitized errors.
+- Production build and TypeScript checks passed for the console and separately compiled worker.
+- Linux amd64 Docker checks passed with a synthetic inference fixture: concurrent queueing,
+  owner edits and versioning, rejection of stale approvals, approval/revocation, feedback,
+  revised plans, bounded retry/failure, cancellation, usage reporting, and rendered detail.
+- An interrupted worker was killed in the disposable stack, its lease expired, and a second
+  attempt produced exactly one plan. The first attempt remained recorded as interrupted.
+- Legacy SQL upgrade, drift rejection, original project preservation, and restart checks passed.
+- Safari interactions checked brief creation/navigation, queued status, automatic plan refresh,
+  owner editing into a new version, and explicit approval of that version.
+
+Integration data was synthetic and isolated. The fixture is not a model-quality evaluation.
+Paid OpenAI/compatible API calls were not made; those adapters were checked with mocked
+transport only. No full accessibility or mobile visual audit was performed for this release.

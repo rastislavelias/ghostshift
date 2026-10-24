@@ -1,6 +1,6 @@
 # Architecture: foundation
 
-The foundation has two long-running services and one startup migration task:
+The workspace has a console, database, planning worker, and dedicated Ollama, plus startup tasks:
 
 1. **Console**: Next.js + TypeScript, with Tailwind CSS 4 and shadcn/ui. Renders drafts and exposes `/api/projects` and
    `/api/health`. Database access uses Prisma Client with the PostgreSQL driver adapter.
@@ -8,7 +8,11 @@ The foundation has two long-running services and one startup migration task:
 2. **Database**: PostgreSQL 17 with a named Docker volume. Owns project briefs and the
    migration history. No host port is published.
 
-3. **Migrate**: a one-shot container that validates/adopts the legacy schema when needed
+3. **Worker**: claims persisted planning jobs, calls the chosen provider, validates results,
+   and publishes a new plan awaiting human review. No coding or deployment tools.
+4. **Ollama**: separate local inference service and model volume; no published port.
+5. **Model init**: downloads the configured local model once, then exits.
+6. **Migrate**: a one-shot container that validates/adopts the legacy schema when needed
    and runs `prisma migrate deploy`. The CLI stays out of the console runtime image.
 
 The console waits for database readiness and successful completion of the migration task. The health endpoint checks the projects table, not just the HTTP process.
@@ -17,21 +21,22 @@ The Node 24 base image is pinned to a multi-platform index digest. Dependency ve
 resolved by `package-lock.json`; update the base digest deliberately when adopting security
 updates. PostgreSQL follows the maintained `17-alpine` tag within the same major version.
 
-## Why no orchestrator process yet?
+## Planning and approval
 
-There is no real job execution to coordinate. A service that only prints a heartbeat would
-hide that gap and complicate installation. `services/orchestrator` reserves the boundary
-and documents the next step without claiming that agents are working.
+The current flow is brief → persisted planning job → plan version → owner review/edits →
+explicit approval. The worker never approves its own output. PostgreSQL tracks revision
+numbers, jobs, attempts, plans, and events. See [workflow](workflow.md) for limits and leases.
 
-Future flow: console → persisted job → isolated worker → reviewable result → human decision.
-The database remains the source of truth, independent of model conversations.
+Future development flow: approved plan → bounded coding job → isolated execution workspace
+→ reviewable diff and evidence → human decision. Coding execution is not implemented.
 
 ## Deployment boundaries
 
 - This starter is a single-owner local tool. It has no authentication or tenant isolation.
-- Agent execution is not connected. Saving a brief only inserts a draft.
+- Saving a brief inserts a draft. Planning starts only on an explicit request.
 - Application API handlers are short-lived; future coding tasks run in separate workers.
-- No provider SDK, GitHub token, Docker socket, GPU access, or model service is included.
+- No GitHub token, Docker socket, or shell execution is available to the planner.
+- Optional NVIDIA GPU access belongs only to Ollama; console and worker have no GPU devices.
 - Client code and deliverables will live in separate repositories/workspaces.
 - Public demo deployments need authentication, TLS, access controls, and deployment-specific
   configuration before use. Loopback + SSH access is the supported starter configuration.
@@ -47,3 +52,6 @@ timestamps, and CHECK constraints remain intact. See [database workflow](databas
 
 The homepage and listing API show the most recent 50 projects. There is no edit/delete
 workflow or pagination yet. New projects are not silently seeded on startup.
+
+Plans, jobs, attempts and project events are persisted in their own related tables.
+Approval references a specific plan; the application only accepts the latest plan version.

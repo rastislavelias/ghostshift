@@ -1,5 +1,18 @@
 name: ghostshift
 
+x-planner-environment: &planner-environment
+  OLLAMA_BASE_URL: http://ollama:11434
+  OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen3:4b}
+  OLLAMA_MODELS: ${OLLAMA_MODELS:-}
+  OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  OPENAI_MODELS: ${OPENAI_MODELS:-}
+  COMPATIBLE_API_KEY: ${COMPATIBLE_API_KEY:-}
+  COMPATIBLE_BASE_URL: ${COMPATIBLE_BASE_URL:-}
+  COMPATIBLE_MODELS: ${COMPATIBLE_MODELS:-}
+  PLANNER_MAX_OUTPUT_TOKENS: ${PLANNER_MAX_OUTPUT_TOKENS:-2048}
+  PLANNER_MAX_ATTEMPTS: ${PLANNER_MAX_ATTEMPTS:-2}
+  PLANNER_TIMEOUT_SECONDS: ${PLANNER_TIMEOUT_SECONDS:-240}
+
 services:
   console:
     build:
@@ -10,6 +23,7 @@ services:
     ports:
       - "127.0.0.1:${GHOSTSHIFT_PORT:-3000}:3000"
     environment:
+      <<: *planner-environment
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: "1"
       PGHOST: database
@@ -49,6 +63,70 @@ services:
     security_opt:
       - no-new-privileges:true
 
+  worker:
+    build:
+      context: .
+      target: worker
+    command: ["node", "worker/services/orchestrator/worker.js"]
+    restart: unless-stopped
+    init: true
+    environment:
+      <<: *planner-environment
+      PGHOST: database
+      PGPORT: "5432"
+      PGDATABASE: ghostshift
+      PGUSER: ghostshift
+      PGPASSWORD: ${POSTGRES_PASSWORD:-ghostshift-local-only}
+    depends_on:
+      database:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      model-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "node", "-e", "const f=require('node:fs');process.exit(Date.now()-f.statSync('/tmp/ghostshift-worker-heartbeat').mtimeMs<45000?0:1)"]
+      interval: 15s
+      timeout: 5s
+      retries: 4
+      start_period: 30s
+    stop_grace_period: 30s
+    security_opt:
+      - no-new-privileges:true
+
+  ollama:
+    image: ollama/ollama:0.40.7@sha256:2e6cc92ffa43b4b1a2e70e315407e00ac97ec125afc71277d73c7efe01c4f31b
+    restart: unless-stopped
+    environment:
+      OLLAMA_HOST: 0.0.0.0:11434
+      OLLAMA_NO_CLOUD: "1"
+      OLLAMA_MAX_LOADED_MODELS: "1"
+      OLLAMA_NUM_PARALLEL: "1"
+    volumes:
+      - ollama-data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+    security_opt:
+      - no-new-privileges:true
+
+  model-init:
+    image: ollama/ollama:0.40.7@sha256:2e6cc92ffa43b4b1a2e70e315407e00ac97ec125afc71277d73c7efe01c4f31b
+    restart: "no"
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      MODEL: ${OLLAMA_MODEL:-qwen3:4b}
+    entrypoint: ["/bin/sh", "-c"]
+    command: ['ollama show "$$MODEL" >/dev/null 2>&1 || ollama pull "$$MODEL"']
+    depends_on:
+      ollama:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+
   database:
     image: postgres:17-alpine
     restart: unless-stopped
@@ -65,4 +143,5 @@ services:
       retries: 12
 
 volumes:
+  ollama-data:
   postgres-data:

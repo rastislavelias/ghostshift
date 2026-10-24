@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../apps/console/generated/prisma"
+  provider            = "prisma-client"
+  importFileExtension = "ts"
+  output              = "../apps/console/generated/prisma"
 }
 
 datasource db {
@@ -14,6 +15,15 @@ model Project {
   status     String   @default("draft") @db.Text
   created_at DateTime @default(now()) @db.Timestamptz(6)
 
+  revision         Int            @default(0)
+  feedback         String?        @db.Text
+  approved_plan_id String?        @db.Uuid
+  approved_plan    ProjectPlan?   @relation("ApprovedPlan", fields: [approved_plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "projects_approved_plan_fkey")
+  approved_at      DateTime?      @db.Timestamptz(6)
+  plans            ProjectPlan[]
+  jobs             PlanningJob[]
+  events           ProjectEvent[]
+
   @@map("projects")
 }
 
@@ -23,4 +33,71 @@ model LegacySchemaMigration {
   applied_at DateTime @default(now()) @db.Timestamptz(6)
 
   @@map("schema_migrations")
+}
+
+model ProjectPlan {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  project_id String   @db.Uuid
+  project    Project  @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  version    Int
+  content    Json
+  source     String   @db.Text
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  approved_projects Project[] @relation("ApprovedPlan")
+
+  @@unique([project_id, version])
+  @@map("project_plans")
+}
+
+model PlanningJob {
+  id                String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  project_id        String            @db.Uuid
+  project           Project           @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  provider          String            @db.Text
+  model             String            @db.Text
+  input             Json
+  status            String            @default("queued") @db.Text
+  attempts          Int               @default(0)
+  max_attempts      Int               @default(2)
+  max_output_tokens Int
+  available_at      DateTime          @default(now()) @db.Timestamptz(6)
+  lease_until       DateTime?         @db.Timestamptz(6)
+  lease_owner       String?           @db.Uuid
+  error             String?           @db.Text
+  created_at        DateTime          @default(now()) @db.Timestamptz(6)
+  finished_at       DateTime?         @db.Timestamptz(6)
+  runs              PlanningAttempt[]
+
+  @@index([status, available_at])
+  @@map("planning_jobs")
+}
+
+model PlanningAttempt {
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  job_id        String      @db.Uuid
+  job           PlanningJob @relation(fields: [job_id], references: [id], onDelete: Cascade)
+  number        Int
+  status        String      @default("running") @db.Text
+  input_tokens  Int?
+  output_tokens Int?
+  duration_ms   Int?
+  error         String?     @db.Text
+  started_at    DateTime    @default(now()) @db.Timestamptz(6)
+  finished_at   DateTime?   @db.Timestamptz(6)
+
+  @@unique([job_id, number])
+  @@map("planning_attempts")
+}
+
+model ProjectEvent {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  project_id String   @db.Uuid
+  project    Project  @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  kind       String   @db.Text
+  detail     Json
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([project_id, created_at])
+  @@map("project_events")
 }

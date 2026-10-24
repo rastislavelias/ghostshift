@@ -3,12 +3,13 @@
 **One human. A team of AI agents. From idea to deployment.**
 
 Ghostshift is an open-source experiment in building a human-directed AI development studio.
-This first release is a small, working foundation: a Next.js control console, PostgreSQL,
-Prisma ORM, and a Docker Compose setup that starts the workspace with one command.
+Ghostshift turns a brief into a reviewable AI project plan with a Next.js control console,
+PostgreSQL, Prisma ORM, a persisted worker, and its own Ollama instance.
 
-**Current status: foundation, not an autonomous development team.** You can create and store
-project briefs. Agent execution, model providers, GitHub automation, deployment automation,
-and voice input are future work. No AI account or API key is needed to run this version.
+**Current status: project planning and human approval.** Create a brief, select a model,
+review/edit/version the plan, request changes, and approve a specific version. Coding agents,
+GitHub automation, deployment automation, and voice input are future work. No paid API key
+is needed for the bundled local planner.
 
 ## Start with Docker
 
@@ -24,8 +25,10 @@ docker compose up --build -d --wait
 ```
 
 Open **http://localhost:3000** and create your first project. Startup waits for PostgreSQL,
-runs Prisma migrations in a one-shot container, and starts the console. The first build takes longer;
-later starts reuse cached layers. There are no automatic model downloads or paid AI calls.
+runs Prisma migrations, and starts the console and worker. On first startup, a dedicated
+Ollama service downloads `qwen3:4b` into its own persistent model volume. Allow time and disk
+space for the image and model download. Later starts reuse the model and cached layers.
+No inference is requested until you ask for a project plan; external paid APIs are opt-in.
 
 The console binds to `127.0.0.1`, and PostgreSQL is not published to the host. This version
 has **no login** and is intended for a single owner using a local machine or SSH tunnel.
@@ -44,9 +47,9 @@ Then open http://localhost:3000 on your own computer.
 | `apps/console` | Next.js App Router, TypeScript, Tailwind CSS, shadcn/ui, project form and saved drafts |
 | `prisma` | Typed database schema and Prisma migrations, applied automatically at startup |
 | `db/migrations` | Immutable legacy SQL, retained for upgrade verification |
-| `scripts` | Startup, database migration, and integration smoke check |
+| `scripts` | Startup, database migration, smoke and workflow integration checks |
 | `docs` | Architecture, recovery instructions, and the first development milestone |
-| `services/orchestrator` | Documented boundary for a future worker service; no worker runs yet |
+| `services/orchestrator` | Persisted planning worker, provider adapters, leases, retries and cancellation |
 | `AGENTS.md` | Repository instructions for AI coding tools and contributors |
 | `.github/workflows/ci.yml` | Type checks, unit tests, Docker build and integration checks |
 
@@ -58,6 +61,13 @@ development value, not a production secret. Real secrets must stay outside Git.
 
 - `GHOSTSHIFT_PORT`: localhost port, default `3000`.
 - `POSTGRES_PASSWORD`: PostgreSQL password, default `ghostshift-local-only`.
+- `OLLAMA_MODEL`: local model initialized at startup, default `qwen3:4b`.
+- `OLLAMA_MODELS`, `OPENAI_MODELS`, `COMPATIBLE_MODELS`: model allowlists; see [workflow](docs/workflow.md).
+- Optional API keys and limits: see `.env.example`. Keys stay outside Git and the browser.
+
+CPU mode is the default. Linux/NVIDIA users can set
+`COMPOSE_FILE=compose.yaml:compose.gpu.yaml` in `.env` after installing NVIDIA Container
+Toolkit. The same startup command then enables GPU access only for Ghostshift’s Ollama.
 
 Changing this password in `.env` after initialization does not change the password stored
 inside PostgreSQL. Rotate the database role password separately if needed. Do not delete
@@ -72,7 +82,7 @@ docker compose down
 docker compose up -d --wait
 ```
 
-`down` preserves the database volume. **`docker compose down -v` deletes this stack's data.**
+`down` preserves the database volume. **`docker compose down -v` deletes this stack's database and model data.**
 
 After pulling updates, run `docker compose up --build -d --wait` again. Applied migrations
 are recorded and skipped on future starts. Migration startup is serialized with a
@@ -112,7 +122,7 @@ npm run smoke
 This creates one draft named `Smoke test` and checks health, rejected input, cross-origin
 protection, project creation, listing, and rendering. Use a test workspace, not a client DB.
 
-See [architecture](docs/architecture.md), [UI conventions](docs/ui.md), [next milestone](docs/roadmap.md), and
+See [planning and approval](docs/workflow.md), [architecture](docs/architecture.md), [UI conventions](docs/ui.md), [next milestone](docs/roadmap.md), and
 [validation](docs/validation.md). Repo documentation is in English for contributors and
 portfolio reviewers.
 

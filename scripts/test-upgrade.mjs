@@ -14,7 +14,7 @@ function docker(args, { input, allowFailure = false } = {}) {
   return result;
 }
 function compose(args, options) {
-  return docker(['compose', '-p', project, ...args], options);
+  return docker(['compose', '-f', 'compose.yaml', '-f', 'compose.test.yaml', '-p', project, ...args], options);
 }
 function sql(input) {
   return compose(['exec', '-T', 'database', 'psql', '-U', 'ghostshift', '-d', 'ghostshift', '-v', 'ON_ERROR_STOP=1', '-At'], { input }).stdout.trim();
@@ -51,12 +51,12 @@ try {
     const response = await fetch(`http://127.0.0.1:${env.GHOSTSHIFT_PORT}/api/projects`);
     assert.equal(response.status, 200);
     const { projects } = await response.json();
-    assert.deepEqual(projects, [{ id, name: 'Legacy project', brief: 'Preserve this brief and its UUID.', status: 'draft', created_at: '2026-01-01T12:00:00.000Z' }]);
+    assert.deepEqual(projects.map(({id,name,brief,status,created_at}) => ({id,name,brief,status,created_at})), [{ id, name: 'Legacy project', brief: 'Preserve this brief and its UUID.', status: 'draft', created_at: '2026-01-01T12:00:00.000Z' }]);
   }
   await checkProject();
   assert.equal(sql('SELECT name FROM schema_migrations;'), '001_projects.sql');
-  assert.equal(sql('SELECT count(*) FROM _prisma_migrations WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL;'), '1');
-  assert.equal(sql("SELECT count(*) FROM pg_constraint WHERE conrelid = 'projects'::regclass AND contype = 'c' AND convalidated;"), '3');
+  assert.equal(sql('SELECT count(*) FROM _prisma_migrations WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL;'), '2');
+  assert.equal(sql("SELECT count(*) FROM pg_constraint WHERE conrelid = 'projects'::regclass AND contype = 'c' AND convalidated;"), '5');
   compose(['down']);
   compose(['up', '-d', '--wait']);
   await checkProject();

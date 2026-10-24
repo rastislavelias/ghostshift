@@ -1,0 +1,10 @@
+# Linux/NVIDIA only. Requires the NVIDIA Container Toolkit on the Docker host.
+services:
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
