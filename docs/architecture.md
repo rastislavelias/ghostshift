@@ -10,6 +10,9 @@ The first release deliberately has two running services:
 The console waits for database readiness and applies unapplied SQL migrations before
 starting. The health endpoint checks the projects table, not just the HTTP process.
 The application image uses a multi-stage build and runs as an unprivileged user.
+The Node 24 base image is pinned to a multi-platform index digest. Dependency versions are
+resolved by `package-lock.json`; update the base digest deliberately when adopting security
+updates. PostgreSQL follows the maintained `17-alpine` tag within the same major version.
 
 ## Why no orchestrator process yet?
 

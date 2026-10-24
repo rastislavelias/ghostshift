@@ -8,7 +8,8 @@ Checked on 2026-10-24 for the initial foundation release.
 | Input validation tests | 2 tests passed |
 | TypeScript check | Passed |
 | Next.js production build on macOS arm64 | Passed |
-| Docker image build on Linux amd64 | Passed using the legacy builder; see limitation below |
+| Docker image build on Linux amd64 | Passed with BuildKit and the final pinned base image |
+| Standard `docker compose up --build -d --wait` | Passed on Linux amd64 |
 | Compose startup, migrations and service health | Passed on Linux amd64 |
 | HTTP/API integration smoke checks | Passed: health, invalid input, cross-origin rejection, save, list, rendered draft |
 | Browser form submission | Passed in Safari; confirmation shown and saved draft listed |
@@ -23,10 +24,10 @@ was retested successfully.
 
 ## Limits of this validation
 
-The server's BuildKit path stalled while resolving Docker Hub image metadata. The same
-Dockerfile built successfully with `DOCKER_BUILDKIT=0 docker build`; the resulting image
-passed the runtime and recovery checks. This is recorded rather than claiming a successful
-BuildKit build on that host. GitHub Actions separately runs the standard Compose build.
+An initial BuildKit run stalled while resolving a mutable Docker Hub tag. Pinning the Node
+base to its multi-platform image-index digest resolved the issue. The final Dockerfile was
+then built and started with standard Compose and BuildKit, and the HTTP smoke checks passed
+again. The image index was checked to include both linux/amd64 and linux/arm64/v8.
 
 The arm64 application build was checked on macOS, but the arm64 Docker image has not been
 run. Authentication, public deployment, GPU inference and agent execution are not implemented
