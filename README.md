@@ -41,7 +41,7 @@ Then open http://localhost:3000 on your own computer.
 
 | Component | Purpose |
 | --- | --- |
-| `apps/console` | Next.js App Router, TypeScript, project form and saved drafts |
+| `apps/console` | Next.js App Router, TypeScript, Tailwind CSS, shadcn/ui, project form and saved drafts |
 | `db/migrations` | Versioned PostgreSQL schema, applied automatically at startup |
 | `scripts` | Startup, database migration, and integration smoke check |
 | `docs` | Architecture, recovery instructions, and the first development milestone |
@@ -109,7 +109,7 @@ npm run smoke
 This creates one draft named `Smoke test` and checks health, rejected input, cross-origin
 protection, project creation, listing, and rendering. Use a test workspace, not a client DB.
 
-See [architecture](docs/architecture.md), [next milestone](docs/roadmap.md), and
+See [architecture](docs/architecture.md), [UI conventions](docs/ui.md), [next milestone](docs/roadmap.md), and
 [validation](docs/validation.md). Repo documentation is in English for contributors and
 portfolio reviewers.
 

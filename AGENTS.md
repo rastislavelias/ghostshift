@@ -9,6 +9,8 @@ Keep that distinction explicit in code, UI, documentation, and PR descriptions.
 ## Repository map
 
 - `apps/console`: Next.js App Router UI and HTTP API, written in TypeScript.
+- `apps/console/components/ui`: shadcn/ui components; use Tailwind utilities and the semantic
+  theme tokens in `app/globals.css`. See `docs/ui.md`. Preserve accessible labels and states.
 - `db/migrations`: ordered SQL migrations applied by `scripts/migrate.mjs`.
 - `services/orchestrator`: future execution boundary; do not invent an idle worker.
 - `docs`: architecture, operations, roadmap, and validation evidence.

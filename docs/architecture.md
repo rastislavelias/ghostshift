@@ -2,7 +2,7 @@
 
 The first release deliberately has two running services:
 
-1. **Console**: Next.js + TypeScript. Renders drafts and exposes `/api/projects` and
+1. **Console**: Next.js + TypeScript, with Tailwind CSS 4 and shadcn/ui. Renders drafts and exposes `/api/projects` and
    `/api/health`. It does not execute prompts or shell commands.
 2. **Database**: PostgreSQL 17 with a named Docker volume. Owns project briefs and the
    migration history. No host port is published.
