@@ -18,7 +18,11 @@ export type Usage = { input: number | null; output: number | null };
 const tokenCount = (value: unknown) => typeof value === 'number' && Number.isSafeInteger(value) && value >= 0 ? value : null;
 
 async function generateDocument<T>(spec: { schema: object; instructions: string; parse: (value: unknown) => T; name: string }, job: { provider: string; model: string; input: unknown; max_output_tokens: number }, signal: AbortSignal) {
-  try { selectModel(job.provider, job.model); } catch { throw new ProviderError('provider_not_configured', false); }
+  let key: string | undefined;
+  if (job.provider === 'openai') {
+    try { key = process.env.OPENAI_API_KEY || await (await import('../../apps/console/lib/provider-credentials.ts')).openAIKey(); } catch { throw new ProviderError('credential_unavailable', false); }
+  }
+  try { selectModel(job.provider, job.model, !!key); } catch { throw new ProviderError('provider_not_configured', false); }
   const { schema, instructions } = spec;
   const input = JSON.stringify(job.input);
   if (input.length > 32000) throw new ProviderError('input_limit', false);
@@ -30,7 +34,7 @@ async function generateDocument<T>(spec: { schema: object; instructions: string;
       options: { temperature: 0.2, num_predict: job.max_output_tokens, num_ctx: 16384 }, keep_alive: '5m' };
   } else if (job.provider === 'openai') {
     url = 'https://api.openai.com/v1/responses';
-    headers.Authorization = `Bearer ${process.env.OPENAI_API_KEY}`;
+    headers.Authorization = `Bearer ${key}`;
     body = { model: job.model, store: false, instructions, input,
       max_output_tokens: job.max_output_tokens,
       text: { format: { type: 'json_schema', name: spec.name, strict: true, schema } } };

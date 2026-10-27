@@ -1,15 +1,15 @@
 export type ProviderId = 'ollama' | 'openai' | 'compatible';
 export type ModelOption = { provider: ProviderId; model: string; label: string; paid: boolean };
 const models = (value: string | undefined) => [...new Set((value || '').split(',').map(s => s.trim()).filter(s => s && s.length <= 100))];
-export function modelCatalog(): ModelOption[] {
+export function modelCatalog(openaiConfigured = !!process.env.OPENAI_API_KEY): ModelOption[] {
   return [
     ...models(process.env.OLLAMA_MODELS || process.env.OLLAMA_MODEL || 'qwen3:4b').map(model => ({ provider: 'ollama' as const, model, label: `Ollama · ${model}`, paid: false })),
-    ...(process.env.OPENAI_API_KEY ? models(process.env.OPENAI_MODELS) : []).map(model => ({ provider: 'openai' as const, model, label: `OpenAI · ${model}`, paid: true })),
+    ...(openaiConfigured ? models(process.env.OPENAI_MODELS || 'gpt-5-mini') : []).map(model => ({ provider: 'openai' as const, model, label: `OpenAI · ${model}`, paid: true })),
     ...(process.env.COMPATIBLE_API_KEY && process.env.COMPATIBLE_BASE_URL ? models(process.env.COMPATIBLE_MODELS) : []).map(model => ({ provider: 'compatible' as const, model, label: `Compatible API · ${model}`, paid: true })),
   ];
 }
-export function selectModel(provider: unknown, model: unknown): ModelOption {
-  const selected = modelCatalog().find(m => m.provider === provider && m.model === model);
+export function selectModel(provider: unknown, model: unknown, openaiConfigured = !!process.env.OPENAI_API_KEY): ModelOption {
+  const selected = modelCatalog(openaiConfigured).find(m => m.provider === provider && m.model === model);
   if (!selected) throw new Error('Choose a model configured on the server.');
   return selected;
 }

@@ -16,6 +16,7 @@ Keep that distinction explicit in code, UI, documentation, and PR descriptions.
 - `scripts/migrate.mjs`: guarded legacy adoption, then Prisma Migrate deployment.
 - `services/orchestrator`: planning worker and provider adapters. Keep model output untrusted;
   preserve lease fencing, cancellation, revision checks and human-only approval.
+- `apps/console/lib/provider-credentials.ts`: encrypted provider settings; never expose stored keys or mount the key volume in the execution sandbox.
 - `docs`: architecture, operations, roadmap, and validation evidence.
 
 ## Engineering rules

@@ -6,7 +6,7 @@ The document root applies the dark variant; there is no theme switch in this rel
 
 ## Structure
 
-- `apps/console/components/ui`: Button, Input, Textarea, Label, Card and Badge.
+- `apps/console/components/ui`: Button, Input, Textarea, Label, Card, Badge, Sidebar, Sheet, Tooltip, Separator and Skeleton.
 - `apps/console/lib/utils.ts`: `cn()` combines conditional classes and resolves Tailwind conflicts.
 - `apps/console/components.json`: shadcn registry configuration and import aliases.
 - `apps/console/postcss.config.mjs`: Tailwind's PostCSS integration.
@@ -18,7 +18,7 @@ Use the shared UI components for controls and panels instead of introducing glob
 selectors. Keep labels, focus states, keyboard access, and status/error announcements intact.
 
 The source components were obtained from the official `new-york-v4` shadcn registry on
-2026-10-24. Imports were adapted to the local `cn()` utility and individual Radix packages.
+2026-10-24 and 2026-10-27. Imports were adapted to the local `cn()` utility and individual Radix packages.
 Their MIT license is preserved in [third-party notices](../THIRD_PARTY_NOTICES.md).
 
 From the repository root, inspect the setup with:
@@ -31,5 +31,5 @@ When adding a component, review the CLI's proposed changes and dependencies befo
 them. Avoid overwriting theme customizations. Components are owned source files in this
 repository; they are not imported from a monolithic shadcn component package.
 
-Tailwind runs during the existing Next.js build. The Docker startup command and database
-schema are unchanged. No frontend CDN or additional running service is required.
+Tailwind runs during the existing Next.js build. The shared app shell provides Dashboard, Projects and Configuration navigation. See
+[configuration](configuration.md) for encrypted provider credentials and their persistence. No frontend CDN or additional running service is required.

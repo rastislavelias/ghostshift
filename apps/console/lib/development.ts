@@ -1,6 +1,7 @@
+import { selectConfiguredModel } from './provider-configuration';
 import { database } from './db';
 import { WorkflowError } from './workflow';
-import { boundedNumber, selectModel } from './providers';
+import { boundedNumber } from './providers';
 import { developmentRepository } from './development-contract';
 const text = (value: unknown, max: number) => typeof value === 'string' && value.trim().length > 0 && value.trim().length <= max ? value.trim() : null;
 export async function changeDevelopment(id: string, body: Record<string, unknown>) {
@@ -25,7 +26,7 @@ export async function changeDevelopment(id: string, body: Record<string, unknown
         if (latest?.status === 'awaiting_review' && latest.plan_id === project.approved_plan_id) throw new WorkflowError('Accept the latest result or request changes before starting another task.', 409);
         const repository = developmentRepository();
         if (!repository) throw new WorkflowError('Configure DEVELOPER_REPOSITORY on the server first.', 409);
-        let selected; try { selected = selectModel(body.provider, body.model); } catch { throw new WorkflowError('Select a configured model.'); }
+        let selected; try { selected = await selectConfiguredModel(body.provider, body.model, tx); } catch { throw new WorkflowError('Select a configured model.'); }
         if (selected.paid && body.allowPaid !== true) throw new WorkflowError('Confirm possible API charges.');
         const task = text(body.task, 3000), criteria = text(body.criteria, 3000);
         if (!task || !criteria) throw new WorkflowError('Task and acceptance criteria are required (up to 3,000 characters each).');

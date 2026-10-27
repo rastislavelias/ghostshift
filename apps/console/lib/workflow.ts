@@ -1,7 +1,8 @@
+import { selectConfiguredModel } from './provider-configuration';
 import { database } from './db';
 import { Prisma } from '../generated/prisma/client';
 import { parsePlan } from './planning-contract';
-import { attemptLimit, boundedNumber, outputLimit, selectModel } from './providers';
+import { attemptLimit, boundedNumber, outputLimit } from './providers';
 
 export class WorkflowError extends Error {
   constructor(message: string, public status = 400) { super(message); }
@@ -41,7 +42,8 @@ export async function changeWorkflow(id: string, body: Record<string, unknown>) 
     if (body.action === 'generate') {
       if (active) throw new WorkflowError('A planning job is already active.', 409);
       if (project.status === 'approved') throw new WorkflowError('Request changes before replacing an approved plan.', 409);
-      const selected = validated(() => selectModel(body.provider, body.model));
+      let selected;
+      try { selected = await selectConfiguredModel(body.provider, body.model, tx); } catch { throw new WorkflowError('Choose a model configured on the server.'); }
       if (selected.paid && body.allowPaid !== true) throw new WorkflowError('Confirm that this request may incur API charges.');
       const max_output_tokens = validated(() => boundedNumber(body.maxOutputTokens, outputLimit(), 256, outputLimit()));
       const job = await tx.planningJob.create({ data: {

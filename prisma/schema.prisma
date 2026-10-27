@@ -152,3 +152,11 @@ model DevelopmentAttempt {
   @@unique([job_id, number])
   @@map("development_attempts")
 }
+
+// Ciphertext only; the encryption key lives outside the database in a private Docker volume.
+model ProviderCredential {
+  provider String @id @db.Text
+  ciphertext String @db.Text
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+  @@map("provider_credentials")
+}

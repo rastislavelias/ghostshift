@@ -24,7 +24,7 @@ cd ghostshift
 docker compose up --build -d --wait
 ```
 
-Open **http://localhost:3000** and create your first project. Startup waits for PostgreSQL,
+Open **http://localhost:3000**, choose **Projects** in the sidebar, and create your first project. Startup waits for PostgreSQL,
 runs Prisma migrations, and starts the console, workers and isolated executor. On first startup, a dedicated
 Ollama service downloads `qwen3:4b` into its own persistent model volume. Allow time and disk
 space for the image and model download. Later starts reuse the model and cached layers.
@@ -57,6 +57,9 @@ Then open http://localhost:3000 on your own computer.
 See [development workflow and sandbox boundaries](docs/development.md) to configure a public playground and run a task after plan approval.
 
 ## Configuration
+
+Use **Configuration** in the dashboard to manage an encrypted OpenAI API key. See [credential storage and recovery](docs/configuration.md). The home Dashboard is intentionally empty; project creation and listing are under **Projects**.
+
 
 No `.env` file is required for the local starter. To override settings, copy `.env.example`
 to `.env` before first startup. The default database password is an explicitly public local

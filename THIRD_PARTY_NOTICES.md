@@ -29,3 +29,5 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 LangGraph and LangChain Core are MIT-licensed dependencies used for the bounded development workflow. Zod is MIT-licensed. Their package license files are retained in installed dependencies. No LangSmith service or subscription is required.
+
+Additional shadcn/ui Sidebar, Sheet, Tooltip, Separator, Skeleton and mobile hook sources were obtained from the official new-york-v4 registry on 2026-10-27 under the MIT license above. Lucide icons and Radix Primitives retain their package license notices.

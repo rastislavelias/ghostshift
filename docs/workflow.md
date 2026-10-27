@@ -11,7 +11,7 @@ them and a bounded excerpt of the previous plan. A revised plan always needs fre
 Approval references an exact plan ID and timestamp. Editing or requesting changes revokes
 approval. No coding, email, repository access, or deployment starts when a plan is approved.
 
-The homepage links to each workspace. Activity, historical plan versions (latest 30), and
+The Projects page links to each workspace. Activity, historical plan versions (latest 30), and
 planning runs (latest 20) remain available. The activity view shows the latest 100 events;
 older records remain in PostgreSQL. The app is still a single-owner tool accessed through
 loopback or SSH; it does not implement authentication or multiple user identities.
@@ -27,7 +27,7 @@ project API. The UI requires an explicit paid-call checkbox for each external re
   The one-shot `model-init` task downloads `OLLAMA_MODEL` (default `qwen3:4b`) on first use.
   Subsequent starts reuse it. This is separate from other applications' Ollama instances.
   Local-only mode disables Ollama cloud access. No model download is an AI inference charge.
-- **OpenAI:** configure `OPENAI_API_KEY` and comma-separated `OPENAI_MODELS`. The adapter uses
+- **OpenAI:** save a key in **Configuration**, or use the server-managed `OPENAI_API_KEY`. `OPENAI_MODELS` optionally overrides the default `gpt-5-mini` allowlist. See [credential storage](configuration.md). The adapter uses
   Responses with JSON Schema output, no tools, and `store: false`. Use models supporting
   Responses structured output and the configured token limit.
 - **Compatible API:** configure `COMPATIBLE_API_KEY`, `COMPATIBLE_MODELS`, and an HTTPS

@@ -122,3 +122,27 @@ Final sandbox checks additionally planted a temporary file before a request and 
 from generated code. The next request could not see the previous file, and no generated
 scratch file remained after completion. The full development lifecycle was rerun successfully
 with cleanup enabled, including recovery and a result superseded by a newly approved plan.
+
+## Dashboard navigation and OpenAI configuration — 2026-10-27
+
+Executed with Node.js 24 on macOS/arm64 and a disposable Linux/amd64 Docker stack:
+
+- `npm ci`, nine unit/provider/graph/credential tests, production build and both TypeScript checks.
+- Fresh Compose startup without API credentials; Dashboard/Projects/Configuration server rendering,
+  project creation/list/detail smoke checks and the existing planning review/retry/cancellation flow.
+- New settings API: invalid/cross-origin inputs rejected, authenticated AES-GCM ciphertext stored
+  instead of plaintext, API/HTML never returned the synthetic key, stored configuration exposed
+  the OpenAI model, and missing paid consent prevented job creation without contacting OpenAI.
+- Trusted worker read/decrypted the synthetic configured key, observed replacement/removal without
+  restart, and still read it after a full Compose down/up. Master-key permissions were 0600 and
+  the execution sandbox had no master-key mount. Test keys were removed after verification.
+- Development integration: actual typecheck/render/build, bounded repair, patch review/revision,
+  acceptance, exhaustion, cancellation, revoked approval and obsolete-result handling.
+- Legacy schema drift rejection, four-migration upgrade, original record and CHECK preservation,
+  and persistence after restart. The configuration test also restarts its own disposable stack.
+
+No OpenAI API request or charge was made. Actual key validity, account model access and real
+OpenAI inference remain untested. Browser visual/mobile interaction checks were unavailable:
+CUA reported that the Mac was locked, with no available browser surface. No unlock was requested
+because the owner is away from the Mac. Mobile navigation uses the official shadcn/ui Sheet;
+responsive rendering and keyboard behavior still need an unlocked-browser visual check.

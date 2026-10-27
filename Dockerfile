@@ -24,7 +24,7 @@ RUN npm prune --omit=dev --ignore-scripts
 FROM base AS worker
 WORKDIR /app
 ENV NODE_ENV=production
-RUN apk add --no-cache git && addgroup -S -g 1001 ghostshift && adduser -S -u 1001 -G ghostshift ghostshift
+RUN apk add --no-cache git && addgroup -S -g 1001 ghostshift && adduser -S -u 1001 -G ghostshift ghostshift && mkdir -p /var/lib/ghostshift/secrets && chown ghostshift:ghostshift /var/lib/ghostshift/secrets && chmod 700 /var/lib/ghostshift/secrets
 COPY --from=worker-dependencies --chown=ghostshift:ghostshift /app/node_modules ./node_modules
 COPY --from=build --chown=ghostshift:ghostshift /app/dist ./worker
 COPY package.json ./
@@ -41,7 +41,7 @@ ENTRYPOINT ["node", "provider.mjs"]
 FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=0.0.0.0 PORT=3000
-RUN addgroup -S -g 1001 ghostshift && adduser -S -u 1001 -G ghostshift ghostshift
+RUN addgroup -S -g 1001 ghostshift && adduser -S -u 1001 -G ghostshift ghostshift && mkdir -p /var/lib/ghostshift/secrets && chown ghostshift:ghostshift /var/lib/ghostshift/secrets && chmod 700 /var/lib/ghostshift/secrets
 COPY --from=build --chown=ghostshift:ghostshift /app/apps/console/.next/standalone ./
 COPY --from=build --chown=ghostshift:ghostshift /app/apps/console/.next/static ./apps/console/.next/static
 USER ghostshift

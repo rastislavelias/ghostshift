@@ -71,3 +71,7 @@ request. See [workflow configuration](workflow.md) for GPU, providers, and reque
 Project backups now include plans, jobs, attempts, approvals, and activity. Before schema
 updates, take a database backup using the same pg_dump command. Preserve `.env` separately
 and securely; it contains credentials. Model weights can be downloaded again after reinstall.
+
+## UI-managed API keys
+
+Database dumps contain encrypted provider keys. Back up the private `credential-key` volume separately; see [configuration and key recovery](configuration.md). Keep it outside Git.

@@ -27,6 +27,14 @@
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-status-border: var(--status-border);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--foreground);
+  --color-sidebar-primary: var(--primary);
+  --color-sidebar-primary-foreground: var(--primary-foreground);
+  --color-sidebar-accent: var(--accent);
+  --color-sidebar-accent-foreground: var(--foreground);
+  --color-sidebar-border: var(--border);
+  --color-sidebar-ring: var(--ring);
   --font-sans: Arial, Helvetica, sans-serif;
   --font-mono: "Courier New", monospace;
   --radius-sm: calc(var(--radius) - 4px);
@@ -40,6 +48,7 @@
 :root {
   color-scheme: dark;
   --background: #101310;
+  --sidebar: #141914;
   --foreground: #f0f3e8;
   --card: #171c17;
   --card-foreground: #f0f3e8;

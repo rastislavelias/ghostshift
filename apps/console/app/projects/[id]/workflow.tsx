@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { planFields, parsePlan, type PlanContent } from '@/lib/planning-contract';
 import type { ModelOption } from '@/lib/providers';
 import { Button } from '@/components/ui/button';
@@ -63,7 +64,7 @@ export function ProjectWorkflow({ project, models, outputLimit, attemptLimit }: 
           <div className="space-y-2"><Label htmlFor="planner-model">Planning model</Label><select id="planner-model" className={`${fieldClass} w-full`} value={modelIndex} onChange={e => { setModelIndex(Number(e.target.value)); setAllowPaid(false); }} disabled={pending || !models.length}>{models.map((m, i) => <option value={i} key={`${m.provider}/${m.model}`}>{m.label}</option>)}</select></div>
           <div className="space-y-2"><Label htmlFor="output-limit">Output token limit</Label><Input id="output-limit" type="number" min={256} max={outputLimit} value={maxTokens} onChange={e => setMaxTokens(Number(e.target.value))} disabled={pending} /></div>
         </div>
-        <p className="text-xs leading-relaxed text-muted-foreground">Up to {attemptLimit} attempts per request. Token usage is recorded when reported by the provider. OpenAI and compatible APIs become available after the owner configures keys and model names on the server.</p>
+        <p className="text-xs leading-relaxed text-muted-foreground">Up to {attemptLimit} attempts per request. Token usage is recorded when reported by the provider. Manage your OpenAI key in <Link href="/configuration" className="text-primary underline">Configuration</Link>. Other providers and model allowlists use server settings.</p>
         {selected?.paid && <label className="flex items-start gap-3 text-sm"><input type="checkbox" checked={allowPaid} onChange={e => setAllowPaid(e.target.checked)} className="mt-1 accent-primary" />I allow this planning request and its retries to use the selected paid API.</label>}
         {project.feedback && <p className="text-sm whitespace-pre-wrap text-muted-foreground">Requested changes: {project.feedback}</p>}
         <Button onClick={() => act('generate')} disabled={pending || !selected || (selected.paid && !allowPaid) || editing}>{pending ? 'Submitting…' : latest ? 'Generate revised plan' : 'Generate project plan'}</Button>

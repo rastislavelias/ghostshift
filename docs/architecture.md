@@ -56,3 +56,7 @@ workflow or pagination yet. New projects are not silently seeded on startup.
 
 Plans, jobs, attempts and project events are persisted in their own related tables.
 Approval references a specific plan; the application only accepts the latest plan version.
+
+The shared shadcn/ui shell separates Dashboard, Projects and Configuration. Provider keys
+are encrypted in PostgreSQL, with a separate private master-key volume available only to
+the console and trusted workers. See [configuration](configuration.md).
