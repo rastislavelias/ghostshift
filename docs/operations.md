@@ -6,8 +6,11 @@ outside the server too. A backup in the same disk does not survive a disk wipe.
 ## Backup
 
 ```sh
-mkdir -p backups
-docker compose exec -T database pg_dump -U ghostshift -d ghostshift -Fc > backups/ghostshift.dump
+(
+  umask 077
+  mkdir -p backups
+  docker compose exec -T database pg_dump -U ghostshift -d ghostshift -Fc </dev/null > backups/ghostshift.dump
+)
 ```
 
 Check that the command succeeded and copy the dump to secure external storage.
@@ -35,6 +38,10 @@ It does not automatically move with Git, survive a full disk reinstall, or prote
 `docker compose down -v`. Keep the Compose project name consistent when reusing a volume.
 
 Updates: `git pull`, then `docker compose up --build -d --wait`.
+Keep the private backup umask scoped to its subshell. Use a normal source checkout umask
+(such as `022`) for Git updates and Docker builds: runtime containers use unprivileged
+users, so copied public source files and directories must remain readable/traversable.
+Do not loosen permissions on `.env`, backups or the credential-key volume.
 Back up before schema upgrades. Database migrations are forward-only in this foundation;
 restoring a backup is the recovery path for an incompatible schema change.
 

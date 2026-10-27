@@ -46,3 +46,27 @@ The CI manager script also includes full restart persistence for future runs.
   unchanged, and their existing unit tests passed. The required planning workflow was run.
 - This milestone implements text discovery and a project brief; repository ingestion,
   Grok and additional generated documents are not implemented.
+
+## CI restart transport correction
+
+The first CI run reached the manager restart persistence check but its Node HTTP client
+reused a connection closed by the deliberately stopped console (`UND_ERR_SOCKET`). The
+manager test now sends `Connection: close`, matching the existing configuration/workflow
+test helpers. This is a test transport correction; application code is unchanged.
+The complete corrected manager script passed on the disposable Linux stack with worker
+SIGKILL recovery and full Compose down/up persistence enabled.
+
+## Deployment verification
+
+The owner authorized deployment. A private database/configuration backup was captured before
+updating the permanent checkout. An initial build inherited an overly restrictive backup
+umask, making public source files unreadable to the migrator's unprivileged user; no database
+migration ran on that attempt. Normal source permissions were restored without loosening
+backup/environment permissions, and the rebuild/migration completed successfully. Operations
+documentation now scopes the backup umask to a subshell.
+
+All six long-running services were healthy, existing project IDs matched the pre-deployment
+snapshot, and the backup archive was readable. Health, Manager, Projects and Configuration
+returned HTTP 200. The console remained bound to loopback and PostgreSQL had no published
+ports. The existing WireGuard proxy target was preserved. No live model calls were made by
+post-deployment verification.
