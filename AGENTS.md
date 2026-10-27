@@ -3,7 +3,7 @@
 ## Purpose and scope
 
 Build a human-directed AI development studio in small, verifiable increments.
-The current release supports planning, human approval and bounded playground development with human result review. It is not an autonomous development team.
+The current release supports manager discovery with persistent memory, planning, human approval and bounded playground development with human result review. It is not an autonomous development team.
 Keep that distinction explicit in code, UI, documentation, and PR descriptions.
 
 ## Repository map

@@ -14,7 +14,10 @@ createServer(async (req, res) => {
   const parsed = coding ? JSON.parse(input) : null;
   const invalidCode = coding && (parsed.task.includes('[bad-code]') || (parsed.task.includes('[repair]') && !parsed.checks?.length));
   const change = { summary: 'Implemented the requested playground page.', files: [{ path: 'app/page.tsx', content: invalidCode ? 'export default function Home() { return <main><h1>Broken</h1></main> BAD; }' : 'export default function Home() { return <main><h1>Ghostshift Development Demo</h1><p>A verified change prepared for human review.</p><section><h2>Features</h2><p>Bounded tasks, isolated checks and reviewable patches.</p></section></main>; }\n' }] };
-  const text = input.includes('[invalid]') ? '{}' : JSON.stringify(coding ? change : plan);
+  const manager = body.format?.properties?.reply || body.text?.format?.name === 'manager_response';
+  const context = manager ? JSON.parse(input) : null;
+  const managerResult = manager ? { reply: `Let's clarify the MVP. Confirmed memory: ${context.confirmedMemory || '(none)'}`, summary: 'Synthetic summary: scope and acceptance criteria still need owner review.', brief: context.kind === 'brief' ? 'Problem: help a human manage tasks. Users: the owner. MVP: task list. Exclusions: payments. Acceptance: saved tasks survive restart. Open questions: hosting budget.' : '' } : null;
+  const text = input.includes('[invalid]') ? '{}' : JSON.stringify(manager ? managerResult : coding ? change : plan);
   res.writeHead(200, { 'Content-Type': 'application/json' });
   if (req.url === '/v1/responses') res.end(JSON.stringify({ status: 'completed', output: [{ content: [{ type: 'output_text', text }] }], usage: { input_tokens: 100, output_tokens: 200 } }));
   else if (req.url === '/v1/chat/completions') res.end(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: text } }], usage: { prompt_tokens: 100, completion_tokens: 200 } }));

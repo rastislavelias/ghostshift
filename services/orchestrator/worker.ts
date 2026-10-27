@@ -1,3 +1,4 @@
+import { runManagerCycle } from './manager-worker.ts';
 import { randomUUID } from 'node:crypto';
 import { writeFile } from 'node:fs/promises';
 import { setTimeout as delay } from 'node:timers/promises';
@@ -96,7 +97,12 @@ while (!stopping) {
     await writeFile('/tmp/ghostshift-worker-heartbeat', String(Date.now()));
     const job = await claim();
     if (job) { console.log(`Planning job ${job.id}, attempt ${job.attempts}.`); await execute(job); }
-    else await delay(1500);
+    else {
+      current = new AbortController();
+      const managerWorked = await runManagerCycle(current);
+      current = undefined;
+      if (!stopping && !managerWorked) await delay(1500);
+    }
   } catch { console.error('Planner database operation failed; retrying.'); await delay(3000); }
 }
 await database.$disconnect();

@@ -24,6 +24,7 @@ model Project {
   jobs             PlanningJob[]
   events           ProjectEvent[]
   development_jobs DevelopmentJob[]
+  manager_conversation ManagerConversation?
 
   @@map("projects")
 }
@@ -159,4 +160,66 @@ model ProviderCredential {
   ciphertext String @db.Text
   updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
   @@map("provider_credentials")
+}
+
+model ManagerConversation {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title String @db.Text
+  revision Int @default(0)
+  memory String @default("") @db.Text
+  summary String @default("") @db.Text
+  project_id String? @unique @db.Uuid
+  project Project? @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: Cascade)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  messages ManagerMessage[]
+  briefs ManagerBrief[]
+  jobs ManagerJob[]
+  @@map("manager_conversations")
+}
+model ManagerMessage {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  conversation_id String @db.Uuid
+  conversation ManagerConversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+  role String @db.Text
+  content String @db.Text
+  provider String? @db.Text
+  model String? @db.Text
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  @@index([conversation_id, created_at])
+  @@map("manager_messages")
+}
+model ManagerBrief {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  conversation_id String @db.Uuid
+  conversation ManagerConversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+  version Int
+  content String @db.Text
+  source String @db.Text
+  approved_at DateTime? @db.Timestamptz(6)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  @@unique([conversation_id, version])
+  @@map("manager_briefs")
+}
+model ManagerJob {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  conversation_id String @db.Uuid
+  conversation ManagerConversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+  kind String @db.Text
+  provider String @db.Text
+  model String @db.Text
+  input Json
+  status String @default("queued") @db.Text
+  attempts Int @default(0)
+  max_attempts Int @default(2)
+  max_output_tokens Int @default(2048)
+  available_at DateTime @default(now()) @db.Timestamptz(6)
+  lease_owner String? @db.Uuid
+  lease_until DateTime? @db.Timestamptz(6)
+  input_tokens Int?
+  output_tokens Int?
+  error String? @db.Text
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  finished_at DateTime? @db.Timestamptz(6)
+  @@index([status, available_at])
+  @@map("manager_jobs")
 }

@@ -1,11 +1,12 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FolderKanban, LayoutDashboard, Settings2, Command, ChevronRight } from 'lucide-react';
+import { FolderKanban, LayoutDashboard, Settings2, MessagesSquare, Command, ChevronRight } from 'lucide-react';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
 const navigation = [
   { title: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { title: 'Manager', href: '/manager', icon: MessagesSquare },
   { title: 'Projects', href: '/projects', icon: FolderKanban },
   { title: 'Configuration', href: '/configuration', icon: Settings2 },
 ];

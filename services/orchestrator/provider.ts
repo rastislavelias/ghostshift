@@ -80,7 +80,7 @@ async function generateDocument<T>(spec: { schema: object; instructions: string;
     usage = { input: tokenCount(data.usage?.prompt_tokens), output: tokenCount(data.usage?.completion_tokens) };
   }
   try { return { content: spec.parse(JSON.parse(String(text))), usage }; }
-  catch { throw new ProviderError(`invalid_${spec.name === 'project_plan' ? 'plan' : 'change'}`, true); }
+  catch { throw new ProviderError(`invalid_${spec.name === 'project_plan' ? 'plan' : spec.name === 'manager_response' ? 'manager_response' : 'change'}`, true); }
 }
 export const requestTimeout = () => boundedNumber(process.env.PLANNER_TIMEOUT_SECONDS, 240, 10, 600) * 1000;
 

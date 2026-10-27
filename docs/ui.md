@@ -31,5 +31,5 @@ When adding a component, review the CLI's proposed changes and dependencies befo
 them. Avoid overwriting theme customizations. Components are owned source files in this
 repository; they are not imported from a monolithic shadcn component package.
 
-Tailwind runs during the existing Next.js build. The shared app shell provides Dashboard, Projects and Configuration navigation. See
+Tailwind runs during the existing Next.js build. The shared app shell provides Dashboard, Manager, Projects and Configuration navigation. See
 [configuration](configuration.md) for encrypted provider credentials and their persistence. No frontend CDN or additional running service is required.

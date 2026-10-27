@@ -60,3 +60,10 @@ Approval references a specific plan; the application only accepts the latest pla
 The shared shadcn/ui shell separates Dashboard, Projects and Configuration. Provider keys
 are encrypted in PostgreSQL, with a separate private master-key volume available only to
 the console and trusted workers. See [configuration](configuration.md).
+
+## Manager discovery
+
+Manager adds persisted conversations, owner-maintained memory, AI summaries and versioned
+briefs before the existing project lifecycle. The planner worker processes its bounded jobs
+with cancellation, leases and revision fencing. Owner approval creates a draft project without
+starting inference or development. See [manager discovery](manager.md).

@@ -30,6 +30,7 @@ jobs:
         run: docker compose -p ghostshift-ci up --build -d --wait
       - run: npm run smoke
       - run: npm run test:configuration
+      - run: npm run test:manager
       - run: npm run test:workflow
       - run: npm run test:development
       - run: npm run test:sandbox

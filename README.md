@@ -142,3 +142,10 @@ future capabilities are described explicitly rather than presented as completed 
 ## License
 
 MIT. You may use, modify, and redistribute the project under the terms in [LICENSE](LICENSE).
+
+## Project manager discovery
+
+Use **Manager** to discuss ideas with Ollama or OpenAI, maintain confirmed project memory,
+and review a versioned brief before creating a project. Approval does not start model work
+or development. See [manager discovery](docs/manager.md) for persistence, provider consent
+and the boundaries of this milestone.
